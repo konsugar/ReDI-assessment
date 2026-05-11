@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReDI School — Teacher Dashboard</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <header class="admin-header">
+    <div class="admin-header-inner">
+      <a href="index.html" class="admin-logo">
+        <img src="./logo/logo_long.png" alt="ReDI School">
+      </a>
+      <span class="admin-header-label">Teacher Dashboard</span>
+    </div>
+    <nav class="admin-tabs" role="tablist">
+      <button class="admin-tab active" data-tab="submissions" role="tab" aria-selected="true">Submissions</button>
+      <button class="admin-tab" data-tab="questions" role="tab" aria-selected="false">Manage Questions</button>
+    </nav>
+  </header>
+
+  <main class="admin-main">
+
+    <!-- ─── TAB: Submissions ─────────────────────────────────────────────── -->
+    <div id="tab-submissions" class="admin-tab-panel">
+
+      <div class="tab-actions">
+        <button id="btn-export" class="btn-secondary">Export Summary</button>
+        <button id="btn-export-detailed" class="btn-secondary">Export Detailed</button>
+        <button id="btn-clear" class="btn-danger">Clear All Submissions</button>
+      </div>
+
+      <div id="empty-state" class="empty-state hidden">
+        <p>No submissions yet. Participants will appear here after completing the evaluation.</p>
+      </div>
+
+      <section id="section-table" class="hidden">
+        <h2 class="section-title">Submissions <span id="submission-count" class="count-badge"></span></h2>
+        <div class="table-wrapper">
+          <table id="submissions-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Participant Code</th>
+                <th>Submitted</th>
+                <th>Score</th>
+                <th>Self-Ratings</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="section-detail" class="hidden">
+        <button id="btn-back" class="btn-secondary back-btn">← Back to list</button>
+        <div id="detail-container"></div>
+      </section>
+
+    </div>
+
+    <!-- ─── TAB: Manage Questions ────────────────────────────────────────── -->
+    <div id="tab-questions" class="admin-tab-panel hidden">
+
+      <div class="tab-actions">
+        <button id="btn-add-topic" class="btn-secondary">+ Add Topic</button>
+        <button id="btn-add-mcq" class="btn-secondary">+ Add Multiple Choice Question</button>
+        <button id="btn-add-open" class="btn-secondary">+ Add Open Question</button>
+        <span class="tab-actions-spacer"></span>
+        <button id="btn-import" class="btn-secondary">Import JSON</button>
+        <button id="btn-export-questions" class="btn-secondary">Export JSON</button>
+        <button id="btn-reset-questions" class="btn-danger">Reset to Defaults</button>
+        <input type="file" id="import-file" accept="application/json,.json" class="hidden">
+      </div>
+
+      <p class="manage-hint">
+        Changes save automatically to this browser. Use <strong>Export JSON</strong> to back up your question set or copy it to another computer.
+      </p>
+
+      <section class="manage-section">
+        <h2 class="section-title">Topics <span class="section-hint">(used for self-evaluation)</span></h2>
+        <div id="topics-list" class="editor-list"></div>
+      </section>
+
+      <section class="manage-section">
+        <h2 class="section-title">Multiple Choice Questions</h2>
+        <div id="mcq-list" class="editor-list"></div>
+      </section>
+
+      <section class="manage-section">
+        <h2 class="section-title">Open Questions</h2>
+        <div id="open-list" class="editor-list"></div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <script src="questions-default.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
