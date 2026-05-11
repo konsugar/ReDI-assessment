@@ -4,7 +4,8 @@ A static web app for ReDI School's pre-course knowledge evaluation. Students com
 
 ## Pages
 
-- `index.html` — landing page with links to the evaluation and dashboard
+The tool consists of two standalone pages — there's no landing page. Share the URLs directly with the people who need them:
+
 - `evaluation.html` — student-facing evaluation (login → self-evaluation → multiple choice → open questions → submit)
 - `admin.html` — teacher dashboard:
   - **Submissions** tab: review each participant's answers, take per-question notes, export CSV (summary or detailed)
@@ -12,7 +13,7 @@ A static web app for ReDI School's pre-course knowledge evaluation. Students com
 
 ## Running locally
 
-No build step. Either open `index.html` directly in a browser, or serve the folder with any static server:
+No build step. Either open `evaluation.html` directly in a browser, or serve the folder with any static server:
 
 ```sh
 python -m http.server 8000
@@ -119,7 +120,6 @@ These are not implemented in the frontend yet, but worth discussing:
 
 | File | Purpose |
 | --- | --- |
-| `index.html`, `styles.css`, `script.js` | Landing page |
 | `evaluation.html`, `evaluation.css`, `evaluation.js` | Student evaluation |
 | `admin.html`, `admin.css`, `admin.js` | Teacher dashboard |
 | `questions-default.js` | Built-in starter question set (shared by both pages) |
