@@ -1,0 +1,422 @@
+# @ReDI.Assessment.Api_HostAddress = http://localhost:5069
+
+@ReDI.Assessment.Api_HostAddress = https://localhost:7101
+
+###
+###
+### assessments
+###
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/13
+
+###
+
+### Here we can test time limit validation by setting short time limit and trying to submit attempt after that.
+### Old attemps have their own time limits since it was set here.
+### An attempt takes time limit from an assesment and never has its own time limit.
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments
+Content-Type: application/json
+
+{
+	"title": "Timed assessment",
+	"description": "Assessment with time limit",
+	"timeLimitMinutes": 1
+}
+
+### an assessment with no time limit
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments
+Content-Type: application/json
+
+{
+	"title": "MVP text input test",
+	"description": "Assessment for testing TextInput answers.",
+	"timeLimitMinutes": null
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments
+Content-Type: application/json
+
+{
+	"title": "Answer option 201 test",
+	"description": "Temporary test assessment.",
+	"timeLimitMinutes": null
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/clone
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1
+Content-Type: application/json
+
+{
+	"title": "Updated first assessment",
+	"description": "Updated description"
+}
+
+###
+
+DELETE {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1
+
+###
+###
+### questions
+###
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/questions
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/questions
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1/questions/2
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/13/questions
+Content-Type: application/json
+
+{
+	"text": "Open answer",
+	"questionType": 5,
+	"sortOrder": 5
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/13/questions
+Content-Type: application/json
+
+{
+	"text": "Select one option.",
+	"questionType": 1,
+	"sortOrder": 1
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1/questions/1
+Content-Type: application/json
+
+{
+	"text": "Trying to edit after attempts started",
+	"questionType": 1,
+	"sortOrder": 1
+}
+
+###
+
+DELETE {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1/questions/1
+
+###
+###
+### answer-options
+###
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/questions/2/answer-options
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/questions/7/answer-options/5
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/questions/13/answer-options
+Content-Type: application/json
+
+{
+	"text": "Correct option",
+	"isCorrect": true,
+	"sortOrder": 1
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/questions/13/answer-options
+Content-Type: application/json
+
+{
+	"text": "Wrong option",
+	"isCorrect": false,
+	"sortOrder": 2
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/questions/11/answer-options
+Content-Type: application/json
+
+{
+	"text": "Option A",
+	"isCorrect": true,
+	"sortOrder": 1
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/questions/1/answer-options/1
+Content-Type: application/json
+
+{
+	"text": "Trying to edit option after attempts started",
+	"isCorrect": true,
+	"sortOrder": 1
+}
+
+###
+
+DELETE {{ReDI.Assessment.Api_HostAddress}}/api/questions/7/answer-options/5
+
+###
+###
+### attempts
+###
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1/attempts
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/13/attempts
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/attempts/4
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/attempts/4/submit
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/attempts/13/result
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/attempts/8/status
+
+###
+###
+### attempts questions & answers
+###
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/attempts/3/questions/3/answer
+Content-Type: application/json
+
+{
+	"answerText": null,
+	"selectedAnswerOptionIds": [1, 1]
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/attempts/4/questions/7/answer
+Content-Type: application/json
+
+{
+	"answerText": "SQL is a language for working with relational databases.",
+	"selectedAnswerOptionIds": [1]
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/attempts/4/questions/5/answer
+Content-Type: application/json
+
+{
+	"answerText": "This should not be allowed",
+	"selectedAnswerOptionIds": [1]
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/attempts/13/questions/16/answer
+Content-Type: application/json
+
+{
+	"answerText": "I have worked with web applications from the content, testing and user experience side.",
+	"selectedAnswerOptionIds": []
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/attempts/11/questions/14/evaluation
+Content-Type: application/json
+
+{
+	"isCorrect": true
+}
+
+###
+###
+### topics
+###
+###	
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/topics
+
+### topics seed
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/topics
+Content-Type: application/json
+
+{
+	"name": "HTML",
+	"description": "HyperText Markup Language"
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/topics
+Content-Type: application/json
+
+{
+	"name": "CSS",
+	"description": "Cascading Style Sheets"
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/topics
+Content-Type: application/json
+
+{
+	"name": "JavaScript",
+	"description": "Programming for the web"
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/topics
+Content-Type: application/json
+
+{
+	"name": "Responsive Design",
+	"description": "Mobile-first development"
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/topics
+Content-Type: application/json
+
+{
+	"name": "Version Control",
+	"description": "Code management with Git"
+}
+
+### topics link
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/15/topics
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/topics
+Content-Type: application/json
+
+{
+	"topicId": 5,
+	"sortOrder": 5
+}
+
+###
+###
+### submissions
+###
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/submissions
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/submissions/details
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/submissions/18
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/submissions
+Content-Type: application/json
+
+{
+	"participantCode": "TEST-001",
+	"selfEvaluation": [],
+	"multipleChoiceAnswers": [],
+	"openAnswers": []
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/submissions
+Content-Type: application/json
+
+{
+	"participantCode": "TEST-REFACTOR-001",
+	"selfEvaluation": [
+    {
+      "topicId": 1,
+      "topicName": "HTML",
+      "rating": 3
+    },
+    {
+      "topicId": 2,
+      "topicName": "CSS",
+      "rating": 2
+    },
+    {
+      "topicId": 3,
+      "topicName": "JavaScript",
+      "rating": 1
+    },
+    {
+      "topicId": 4,
+      "topicName": "Responsive Design",
+      "rating": 4
+    },
+    {
+      "topicId": 5,
+      "topicName": "Version Control",
+      "rating": 5
+    }
+  ],
+	"multipleChoiceAnswers": [
+		{
+			"questionId": 15,
+			"selectedOption": 1
+		},
+		{
+			"questionId": 16,
+			"selectedOption": 1
+		},
+		{
+			"questionId": 17,
+			"selectedOption": 1
+		}
+	],
+	"openAnswers": [
+		{
+			"questionId": 18,
+			"questionText": "whatever",
+			"text": "This is a test open answer refactoring 1."
+		}
+	]
+}
+
