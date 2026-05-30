@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using ReDI.Assessment.Api.Data;
+
 using ReDI.Assessment.Api.DTOs;
-using ReDI.Assessment.Api.Models;
+using ReDI.Assessment.Api.Services;
 
 namespace ReDI.Assessment.Api.Controllers;
 
@@ -10,76 +9,44 @@ namespace ReDI.Assessment.Api.Controllers;
 [Route("api/questions")]
 public class FrontendQuestionsController : ControllerBase
 {
-    private readonly AssessmentDbContext _context;
     private readonly IConfiguration _configuration;
+    private readonly FrontendQuestionsResponseService _frontendQuestionsResponseService;
 
     public FrontendQuestionsController(
-        AssessmentDbContext context,
-        IConfiguration configuration)
+    IConfiguration configuration,
+    FrontendQuestionsResponseService frontendQuestionsResponseService)
     {
-        _context = context;
         _configuration = configuration;
+        _frontendQuestionsResponseService = frontendQuestionsResponseService;
     }
 
     [HttpGet]
     public async Task<ActionResult<FrontendQuestionsResponse>> GetQuestions()
     {
-        var assessmentId = GetFrontendAssessmentId();
+        var assessmentId = _configuration.GetValue<int>("FrontendAssessment:AssessmentId");
 
-        var assessment = await _context.Assessments
-            .Include(assessment => assessment.Topics)
-                .ThenInclude(assessmentTopic => assessmentTopic.Topic)
-            .Include(assessment => assessment.Questions)
-                .ThenInclude(question => question.AnswerOptions)
-            .FirstOrDefaultAsync(assessment => assessment.Id == assessmentId);
+        var result = await _frontendQuestionsResponseService.BuildForLaunchAsync(assessmentId);
 
-        if (assessment == null)
+        if (result.Status == FrontendQuestionsBuildStatus.Ok)
         {
-            return NotFound($"Frontend assessment with id {assessmentId} was not found.");
+            return result.Response!;
         }
 
-        var response = new FrontendQuestionsResponse
+        if (result.Status == FrontendQuestionsBuildStatus.NotFound)
         {
-            Topics = assessment.Topics
-                .OrderBy(assessmentTopic => assessmentTopic.SortOrder)
-                .ThenBy(assessmentTopic => assessmentTopic.Id)
-                .Select(assessmentTopic => new FrontendTopicResponse
-                {
-                    Id = assessmentTopic.TopicId,
-                    Name = assessmentTopic.Topic.Name,
-                    Description = assessmentTopic.Topic.Description
-                })
-                .ToList(),
+            return NotFound(result.Error);
+        }
 
-            Questions = assessment.Questions
-                .Where(question => question.QuestionType == QuestionType.SingleChoice)
-                .OrderBy(question => question.SortOrder)
-                .ThenBy(question => question.Id)
-                .Select(question => new FrontendQuizQuestionResponse
-                {
-                    Id = question.Id,
-                    Text = question.Text,
-                    Options = question.AnswerOptions
-                        .OrderBy(answerOption => answerOption.SortOrder)
-                        .ThenBy(answerOption => answerOption.Id)
-                        .Select(answerOption => answerOption.Text)
-                        .ToList()
-                })
-                .ToList(),
+        if (result.Status == FrontendQuestionsBuildStatus.NotReady)
+        {
+            return BadRequest(new
+            {
+                message = result.Error,
+                readinessIssues = result.ReadinessIssues
+            });
+        }
 
-            OpenQuestions = assessment.Questions
-                .Where(question => question.QuestionType == QuestionType.TextInput)
-                .OrderBy(question => question.SortOrder)
-                .ThenBy(question => question.Id)
-                .Select(question => new FrontendOpenQuestionResponse
-                {
-                    Id = question.Id,
-                    Text = question.Text
-                })
-                .ToList()
-        };
-
-        return Ok(response);
+        return BadRequest(result.Error);
     }
 
     private int GetFrontendAssessmentId()

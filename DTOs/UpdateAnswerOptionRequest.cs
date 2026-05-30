@@ -11,6 +11,6 @@ public class UpdateAnswerOptionRequest
 
     public bool IsCorrect { get; set; }
 
-    [Range(1, 10000)]
+    [Range(0, int.MaxValue)]
     public int SortOrder { get; set; }
 }

@@ -4,6 +4,7 @@ using ReDI.Assessment.Api.Data;
 
 using ReDI.Assessment.Api.DTOs;
 using ReDI.Assessment.Api.Models;
+using ReDI.Assessment.Api.Services;
 
 namespace ReDI.Assessment.Api.Controllers;
 
@@ -12,10 +13,14 @@ namespace ReDI.Assessment.Api.Controllers;
 public class QuestionsController : ControllerBase
 {
     private readonly AssessmentDbContext _context;
+    private readonly AssessmentStructureGuardService _structureGuardService;
 
-    public QuestionsController(AssessmentDbContext context)
+    public QuestionsController(
+    AssessmentDbContext context,
+    AssessmentStructureGuardService structureGuardService)
     {
         _context = context;
+        _structureGuardService = structureGuardService;
     }
 
     [HttpGet]
@@ -80,6 +85,13 @@ public class QuestionsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateQuestion(int assessmentId, CreateQuestionRequest request)
     {
+        var structureValidationResult = await ValidateStructureCanBeEditedAsync(assessmentId);
+
+        if (structureValidationResult != null)
+        {
+            return structureValidationResult;
+        }
+
         var assessmentExists = await _context.Assessments
             .AnyAsync(a => a.Id == assessmentId);
 
@@ -88,24 +100,22 @@ public class QuestionsController : ControllerBase
             return NotFound();
         }
 
-
-        var assessmentHasAttempts = await _context.AssessmentAttempts
-             .AnyAsync(a => a.AssessmentId == assessmentId);
-
-        if (assessmentHasAttempts)
-        {
-            return BadRequest("Questions cannot be added after attempts have been started for this assessment.");
-        }
-
         if (!IsSupportedMvpQuestionType(request.QuestionType))
         {
             return BadRequest("This question type is not supported in the MVP. Use SingleChoice, MultipleChoice, or TextInput.");
         }
 
+        var text = request.Text?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return BadRequest("Question text is required.");
+        }
+
         var question = new Question
         {
             AssessmentId = assessmentId,
-            Text = request.Text,
+            Text = text,
             QuestionType = request.QuestionType,
             SortOrder = request.SortOrder
         };
@@ -140,6 +150,13 @@ public class QuestionsController : ControllerBase
     int questionId,
     UpdateQuestionRequest request)
     {
+        var structureValidationResult = await ValidateStructureCanBeEditedAsync(assessmentId);
+
+        if (structureValidationResult != null)
+        {
+            return structureValidationResult;
+        }
+
         var question = await _context.Questions
             .FirstOrDefaultAsync(q =>
                 q.Id == questionId &&
@@ -150,21 +167,17 @@ public class QuestionsController : ControllerBase
             return NotFound();
         }
 
-
-        var assessmentHasAttempts = await _context.AssessmentAttempts
-            .AnyAsync(a => a.AssessmentId == assessmentId);
-
-        if (assessmentHasAttempts)
-        {
-            return BadRequest("Questions cannot be edited after attempts have been started for this assessment.");
-        }
-
-
         if (!IsSupportedMvpQuestionType(request.QuestionType))
         {
             return BadRequest("This question type is not supported in the MVP. Use SingleChoice, MultipleChoice, or TextInput.");
         }
 
+        var text = request.Text?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return BadRequest("Question text is required.");
+        }
 
         var existingAnswerOptions = await _context.AnswerOptions
             .Where(ao => ao.QuestionId == question.Id)
@@ -186,7 +199,7 @@ public class QuestionsController : ControllerBase
         }
 
 
-        question.Text = request.Text;
+        question.Text = text;
         question.QuestionType = request.QuestionType;
         question.SortOrder = request.SortOrder;
 
@@ -212,25 +225,27 @@ public class QuestionsController : ControllerBase
     [HttpDelete("{questionId:int}")]
     public async Task<IActionResult> DeleteQuestion(int assessmentId, int questionId)
     {
+        var structureValidationResult = await ValidateStructureCanBeEditedAsync(assessmentId);
+
+        if (structureValidationResult != null)
+        {
+            return structureValidationResult;
+        }
+
         var question = await _context.Questions
-            .FirstOrDefaultAsync(q =>
-                q.Id == questionId &&
-                q.AssessmentId == assessmentId);
+            .Include(question => question.AnswerOptions)
+            .FirstOrDefaultAsync(question =>
+        question.Id == questionId &&
+        question.AssessmentId == assessmentId);
 
         if (question == null)
         {
             return NotFound();
         }
 
-        var assessmentHasAttempts = await _context.AssessmentAttempts
-            .AnyAsync(a => a.AssessmentId == assessmentId);
-
-        if (assessmentHasAttempts)
-        {
-            return BadRequest("Questions cannot be deleted after attempts have been started for this assessment.");
-        }
-
+        _context.AnswerOptions.RemoveRange(question.AnswerOptions);
         _context.Questions.Remove(question);
+        
         await _context.SaveChangesAsync();
 
         return NoContent();
@@ -243,6 +258,24 @@ public class QuestionsController : ControllerBase
         return questionType is QuestionType.SingleChoice
             or QuestionType.MultipleChoice
             or QuestionType.TextInput;
+    }
+
+
+    private async Task<IActionResult?> ValidateStructureCanBeEditedAsync(int assessmentId)
+    {
+        var result = await _structureGuardService.CanEditAssessmentStructureAsync(assessmentId);
+
+        if (result.CanEdit)
+        {
+            return null;
+        }
+
+        if (result.Error == "Assessment was not found.")
+        {
+            return NotFound(result.Error);
+        }
+
+        return BadRequest(result.Error);
     }
 
 }

@@ -41,7 +41,8 @@ namespace ReDI.Assessment.Api.Migrations
 
                     b.Property<string>("Text")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.HasKey("Id");
 
@@ -62,14 +63,19 @@ namespace ReDI.Assessment.Api.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("bit");
 
                     b.Property<int?>("TimeLimitMinutes")
                         .HasColumnType("int");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
@@ -92,7 +98,8 @@ namespace ReDI.Assessment.Api.Migrations
 
                     b.Property<string>("ParticipantCode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("StartedUtc")
                         .HasColumnType("datetime2");
@@ -126,9 +133,10 @@ namespace ReDI.Assessment.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssessmentId");
-
                     b.HasIndex("TopicId");
+
+                    b.HasIndex("AssessmentId", "TopicId")
+                        .IsUnique();
 
                     b.ToTable("AssessmentTopics");
                 });
@@ -165,7 +173,8 @@ namespace ReDI.Assessment.Api.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AnswerText")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<int>("AssessmentAttemptId")
                         .HasColumnType("int");
@@ -178,7 +187,8 @@ namespace ReDI.Assessment.Api.Migrations
 
                     b.Property<string>("TeacherNote")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.HasKey("Id");
 
@@ -208,7 +218,8 @@ namespace ReDI.Assessment.Api.Migrations
 
                     b.Property<string>("TopicName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
@@ -236,7 +247,8 @@ namespace ReDI.Assessment.Api.Migrations
 
                     b.Property<string>("Text")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.HasKey("Id");
 
@@ -254,14 +266,18 @@ namespace ReDI.Assessment.Api.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Topics");
                 });
@@ -280,7 +296,7 @@ namespace ReDI.Assessment.Api.Migrations
             modelBuilder.Entity("ReDI.Assessment.Api.Models.AssessmentAttempt", b =>
                 {
                     b.HasOne("ReDI.Assessment.Api.Models.Assessment", "Assessment")
-                        .WithMany()
+                        .WithMany("Attempts")
                         .HasForeignKey("AssessmentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -369,6 +385,8 @@ namespace ReDI.Assessment.Api.Migrations
 
             modelBuilder.Entity("ReDI.Assessment.Api.Models.Assessment", b =>
                 {
+                    b.Navigation("Attempts");
+
                     b.Navigation("Questions");
 
                     b.Navigation("Topics");

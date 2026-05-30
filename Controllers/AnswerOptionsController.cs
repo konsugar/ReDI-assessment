@@ -6,16 +6,21 @@ namespace ReDI.Assessment.Api.Controllers;
 
 using ReDI.Assessment.Api.DTOs;
 using ReDI.Assessment.Api.Models;
+using ReDI.Assessment.Api.Services;
 
 [ApiController]
 [Route("api/questions/{questionId:int}/answer-options")]
 public class AnswerOptionsController : ControllerBase
 {
     private readonly AssessmentDbContext _context;
+    private readonly AssessmentStructureGuardService _structureGuardService;
 
-    public AnswerOptionsController(AssessmentDbContext context)
+    public AnswerOptionsController(
+    AssessmentDbContext context,
+    AssessmentStructureGuardService structureGuardService)
     {
         _context = context;
+        _structureGuardService = structureGuardService;
     }
 
     [HttpGet]
@@ -76,6 +81,13 @@ public class AnswerOptionsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateAnswerOption(int questionId, CreateAnswerOptionRequest request)
     {
+        var structureValidationResult = await ValidateQuestionStructureCanBeEditedAsync(questionId);
+
+        if (structureValidationResult != null)
+        {
+            return structureValidationResult;
+        }
+
         var question = await _context.Questions
             .FirstOrDefaultAsync(q => q.Id == questionId);
 
@@ -101,18 +113,17 @@ public class AnswerOptionsController : ControllerBase
             }
         }
 
-        var assessmentHasAttempts = await _context.AssessmentAttempts
-            .AnyAsync(a => a.AssessmentId == question.AssessmentId);
+        var text = request.Text?.Trim() ?? string.Empty;
 
-        if (assessmentHasAttempts)
+        if (string.IsNullOrWhiteSpace(text))
         {
-            return BadRequest("Answer options cannot be added after attempts have been started for this assessment.");
+            return BadRequest("Answer option text is required.");
         }
 
         var answerOption = new AnswerOption
         {
             QuestionId = questionId,
-            Text = request.Text,
+            Text = text,
             IsCorrect = request.IsCorrect,
             SortOrder = request.SortOrder
         };
@@ -141,10 +152,17 @@ public class AnswerOptionsController : ControllerBase
 
     [HttpPut("{answerOptionId:int}")]
     public async Task<IActionResult> UpdateAnswerOption(
-    int questionId,
-    int answerOptionId,
-    UpdateAnswerOptionRequest request)
+        int questionId,
+        int answerOptionId,
+        UpdateAnswerOptionRequest request)
     {
+        var structureValidationResult = await ValidateQuestionStructureCanBeEditedAsync(questionId);
+
+        if (structureValidationResult != null)
+        {
+            return structureValidationResult;
+        }
+
         var answerOption = await _context.AnswerOptions
             .Include(ao => ao.Question)
             .FirstOrDefaultAsync(ao =>
@@ -188,17 +206,14 @@ public class AnswerOptionsController : ControllerBase
             }
         }
 
+        var text = request.Text?.Trim() ?? string.Empty;
 
-        var assessmentHasAttempts = await _context.AssessmentAttempts
-            .AnyAsync(a => a.AssessmentId == answerOption.Question.AssessmentId);
-
-        if (assessmentHasAttempts)
+        if (string.IsNullOrWhiteSpace(text))
         {
-            return BadRequest("Answer options cannot be edited after attempts have been started for this assessment.");
+            return BadRequest("Answer option text is required.");
         }
 
-
-        answerOption.Text = request.Text;
+        answerOption.Text = text;
         answerOption.IsCorrect = request.IsCorrect;
         answerOption.SortOrder = request.SortOrder;
 
@@ -219,6 +234,13 @@ public class AnswerOptionsController : ControllerBase
     [HttpDelete("{answerOptionId:int}")]
     public async Task<IActionResult> DeleteAnswerOption(int questionId, int answerOptionId)
     {
+        var structureValidationResult = await ValidateQuestionStructureCanBeEditedAsync(questionId);
+
+        if (structureValidationResult != null)
+        {
+            return structureValidationResult;
+        }
+
         var answerOption = await _context.AnswerOptions
             .Include(ao => ao.Question)
             .FirstOrDefaultAsync(ao =>
@@ -230,13 +252,13 @@ public class AnswerOptionsController : ControllerBase
             return NotFound();
         }
 
-        var assessmentHasAttempts = await _context.AssessmentAttempts
-            .AnyAsync(a => a.AssessmentId == answerOption.Question.AssessmentId);
+        //var assessmentHasAttempts = await _context.AssessmentAttempts
+        //    .AnyAsync(a => a.AssessmentId == answerOption.Question.AssessmentId);
 
-        if (assessmentHasAttempts)
-        {
-            return BadRequest("Answer options cannot be deleted after attempts have been started for this assessment.");
-        }
+        //if (assessmentHasAttempts)
+        //{
+        //    return BadRequest("Answer options cannot be deleted after attempts have been started for this assessment.");
+        //}
 
         if ((answerOption.Question.QuestionType == QuestionType.SingleChoice ||
             answerOption.Question.QuestionType == QuestionType.MultipleChoice) &&
@@ -259,4 +281,28 @@ public class AnswerOptionsController : ControllerBase
 
         return NoContent();
     }
+
+
+    private async Task<IActionResult?> ValidateQuestionStructureCanBeEditedAsync(int questionId)
+    {
+        var result = await _structureGuardService.CanEditQuestionStructureAsync(questionId);
+
+        if (result.CanEdit)
+        {
+            return null;
+        }
+
+        if (result.Error == "Question was not found.")
+        {
+            return NotFound(result.Error);
+        }
+
+        if (result.Error == "Assessment was not found.")
+        {
+            return NotFound(result.Error);
+        }
+
+        return BadRequest(result.Error);
+    }
+
 }

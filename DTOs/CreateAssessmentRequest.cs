@@ -12,6 +12,6 @@ public class CreateAssessmentRequest
     [MaxLength(1000)]
     public string? Description { get; set; }
 
-    [Range(1, 10000)]
+    [Range(1, int.MaxValue)]
     public int? TimeLimitMinutes { get; set; }
 }

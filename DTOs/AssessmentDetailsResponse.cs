@@ -13,6 +13,8 @@ public class AssessmentDetailsResponse
     public DateTime CreatedUtc { get; set; }
 
     public List<QuestionResponse> Questions { get; set; } = new();
+
+    public bool IsPublished { get; set; }
 }
 
 public class QuestionResponse

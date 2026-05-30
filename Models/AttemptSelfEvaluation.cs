@@ -1,4 +1,6 @@
-﻿namespace ReDI.Assessment.Api.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ReDI.Assessment.Api.Models;
 
 public class AttemptSelfEvaluation
 {
@@ -10,6 +12,7 @@ public class AttemptSelfEvaluation
 
     public int TopicId { get; set; }
 
+    [MaxLength(200)]
     public string TopicName { get; set; } = string.Empty;
 
     public int Rating { get; set; }

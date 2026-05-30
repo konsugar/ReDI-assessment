@@ -8,7 +8,7 @@ public class TopicResponse
 
     public string Name { get; set; } = string.Empty;
 
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
 }
 
 public class CreateTopicRequest
@@ -18,6 +18,16 @@ public class CreateTopicRequest
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
 
-    [MaxLength(300)]
-    public string Description { get; set; } = string.Empty;
+    [MaxLength(1000)]
+    public string? Description { get; set; }
+}
+
+public class UpdateTopicRequest
+{
+    [Required]
+    [MaxLength(200)]
+    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(1000)]
+    public string? Description { get; set; }
 }

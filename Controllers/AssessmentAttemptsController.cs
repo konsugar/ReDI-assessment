@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+
 using ReDI.Assessment.Api.Data;
 using ReDI.Assessment.Api.DTOs;
 using ReDI.Assessment.Api.Models;
@@ -13,13 +14,16 @@ public class AssessmentAttemptsController : ControllerBase
 {
     private readonly AssessmentDbContext _context;
     private readonly AttemptStatusService _attemptStatusService;
+    private readonly FrontendAssessmentReadinessService _readinessService;
 
     public AssessmentAttemptsController(
         AssessmentDbContext context,
-        AttemptStatusService attemptStatusService)
+        AttemptStatusService attemptStatusService,
+        FrontendAssessmentReadinessService readinessService)
     {
         _context = context;
         _attemptStatusService = attemptStatusService;
+        _readinessService = readinessService;
     }
 
 
@@ -162,11 +166,29 @@ public class AssessmentAttemptsController : ControllerBase
 
 
         var assessment = await _context.Assessments
-            .FirstOrDefaultAsync(a => a.Id == assessmentId);
+            .Include(assessment => assessment.Questions)
+                .ThenInclude(question => question.AnswerOptions)
+            .FirstOrDefaultAsync(assessment => assessment.Id == assessmentId);
 
         if (assessment == null)
         {
             return NotFound();
+        }
+
+        if (!assessment.IsPublished)
+        {
+            return BadRequest("Assessment is not published.");
+        }
+
+        var readinessIssues = _readinessService.GetReadinessIssues(assessment);
+
+        if (readinessIssues.Count > 0)
+        {
+            return BadRequest(new
+            {
+                message = "Assessment is not ready for frontend.",
+                readinessIssues
+            });
         }
 
         // the moment of attempt's creation

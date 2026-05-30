@@ -1,4 +1,6 @@
-﻿namespace ReDI.Assessment.Api.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ReDI.Assessment.Api.Models;
 
 public class Question
 {
@@ -8,6 +10,7 @@ public class Question
 
     public Assessment? Assessment { get; set; }
 
+    [MaxLength(1000)]
     public string Text { get; set; } = string.Empty;
 
     public QuestionType QuestionType { get; set; }

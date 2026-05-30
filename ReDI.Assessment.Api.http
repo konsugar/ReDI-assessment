@@ -12,7 +12,23 @@ GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments
 
 ###
 
-GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/13
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/17
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments/current
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments/launchable
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments/999
 
 ###
 
@@ -24,20 +40,9 @@ POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments
 Content-Type: application/json
 
 {
-	"title": "Timed assessment",
-	"description": "Assessment with time limit",
-	"timeLimitMinutes": 1
-}
-
-### an assessment with no time limit
-
-POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments
-Content-Type: application/json
-
-{
-	"title": "MVP text input test",
-	"description": "Assessment for testing TextInput answers.",
-	"timeLimitMinutes": null
+	"title": "   Trimmed assessment title   ",
+	"description": "   description with spaces   ",
+	"timeLimitMinutes": 30
 }
 
 ###
@@ -46,9 +51,18 @@ POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments
 Content-Type: application/json
 
 {
-	"title": "Answer option 201 test",
-	"description": "Temporary test assessment.",
-	"timeLimitMinutes": null
+	"title": "Assessment length limits test",
+	"description": "Description is optional and limited",
+	"timeLimitMinutes": 30
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/publication
+Content-Type: application/json
+
+{
+	"isPublished": true
 }
 
 ###
@@ -57,17 +71,22 @@ POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/clone
 
 ###
 
-PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14
 Content-Type: application/json
 
 {
-	"title": "Updated first assessment",
-	"description": "Updated description"
+	"title": "Updated title allowed",
+	"description": "Updated description allowed",
+	"timeLimitMinutes": null
 }
 
 ###
 
-DELETE {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1
+DELETE {{ReDI.Assessment.Api_HostAddress}}/api/assessments/99
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/content
 
 ###
 ###
@@ -79,7 +98,7 @@ GET {{ReDI.Assessment.Api_HostAddress}}/api/questions
 
 ###
 
-GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/questions
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/17/questions
 
 ###
 
@@ -87,40 +106,33 @@ GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1/questions/2
 
 ###
 
-POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/13/questions
-Content-Type: application/json
-
-{
-	"text": "Open answer",
-	"questionType": 5,
-	"sortOrder": 5
-}
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/frontend-questions
 
 ###
 
-POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/13/questions
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/2/questions
 Content-Type: application/json
 
 {
-	"text": "Select one option.",
+	"text": "   Trimmed question text   ",
 	"questionType": 1,
-	"sortOrder": 1
+	"sortOrder": 0
 }
 
 ###
 
-PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1/questions/1
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/16/questions/24
 Content-Type: application/json
 
 {
-	"text": "Trying to edit after attempts started",
+	"text": "Should be blocked while published",
 	"questionType": 1,
-	"sortOrder": 1
+	"sortOrder": 999
 }
 
 ###
 
-DELETE {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1/questions/1
+DELETE {{ReDI.Assessment.Api_HostAddress}}/api/assessments/17/questions/31
 
 ###
 ###
@@ -136,51 +148,29 @@ GET {{ReDI.Assessment.Api_HostAddress}}/api/questions/7/answer-options/5
 
 ###
 
-POST {{ReDI.Assessment.Api_HostAddress}}/api/questions/13/answer-options
+POST {{ReDI.Assessment.Api_HostAddress}}/api/questions/33/answer-options
 Content-Type: application/json
 
 {
-	"text": "Correct option",
-	"isCorrect": true,
-	"sortOrder": 1
-}
-
-###
-
-POST {{ReDI.Assessment.Api_HostAddress}}/api/questions/13/answer-options
-Content-Type: application/json
-
-{
-	"text": "Wrong option",
+	"text": "   Trimmed answer option text   ",
 	"isCorrect": false,
-	"sortOrder": 2
+	"sortOrder": 0
 }
 
 ###
 
-POST {{ReDI.Assessment.Api_HostAddress}}/api/questions/11/answer-options
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/questions/24/answer-options/1
 Content-Type: application/json
 
 {
-	"text": "Option A",
-	"isCorrect": true,
-	"sortOrder": 1
+	"text": "Should be blocked while published",
+	"isCorrect": false,
+	"sortOrder": 999
 }
 
 ###
 
-PUT {{ReDI.Assessment.Api_HostAddress}}/api/questions/1/answer-options/1
-Content-Type: application/json
-
-{
-	"text": "Trying to edit option after attempts started",
-	"isCorrect": true,
-	"sortOrder": 1
-}
-
-###
-
-DELETE {{ReDI.Assessment.Api_HostAddress}}/api/questions/7/answer-options/5
+DELETE {{ReDI.Assessment.Api_HostAddress}}/api/questions/24/answer-options/1
 
 ###
 ###
@@ -188,7 +178,7 @@ DELETE {{ReDI.Assessment.Api_HostAddress}}/api/questions/7/answer-options/5
 ###
 ###
 
-POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/1/attempts
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/attempts
 
 ###
 
@@ -269,7 +259,7 @@ PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/submissions/18/open-a
 Content-Type: application/json
 
 {
-	"teacherNote": "Assessment-specific route test note."
+	"teacherNote": "everything is beautiful"
 }
 
 ###
@@ -298,44 +288,14 @@ Content-Type: application/json
 
 GET {{ReDI.Assessment.Api_HostAddress}}/api/topics
 
-### topics seed
-
-POST {{ReDI.Assessment.Api_HostAddress}}/api/topics
-Content-Type: application/json
-
-{
-	"name": "HTML",
-	"description": "HyperText Markup Language"
-}
-
 ###
 
 POST {{ReDI.Assessment.Api_HostAddress}}/api/topics
 Content-Type: application/json
 
 {
-	"name": "CSS",
-	"description": "Cascading Style Sheets"
-}
-
-###
-
-POST {{ReDI.Assessment.Api_HostAddress}}/api/topics
-Content-Type: application/json
-
-{
-	"name": "JavaScript",
-	"description": "Programming for the web"
-}
-
-###
-
-POST {{ReDI.Assessment.Api_HostAddress}}/api/topics
-Content-Type: application/json
-
-{
-	"name": "Responsive Design",
-	"description": "Mobile-first development"
+	"name": "Topic length limits test",
+	"description": null
 }
 
 ###
@@ -345,22 +305,59 @@ Content-Type: application/json
 
 {
 	"name": "Version Control",
-	"description": "Code management with Git"
+	"description": "Duplicate test"
 }
-
-### topics link
-
-GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/15/topics
 
 ###
 
-POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/topics
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/topics/1
+Content-Type: application/json
+
+{
+	"name": "Should be blocked",
+	"description": "Should be blocked"
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/topics/7
+Content-Type: application/json
+
+{
+	"name": "Nullable description test updated",
+	"description": null
+}
+
+###
+
+DELETE {{ReDI.Assessment.Api_HostAddress}}/api/topics/8
+
+### topics link
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/16/topics
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/17/topics
 Content-Type: application/json
 
 {
 	"topicId": 5,
-	"sortOrder": 5
+	"sortOrder": 999
 }
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/16/topics/14
+Content-Type: application/json
+
+{
+	"sortOrder": 997
+}
+
+###
+
+DELETE {{ReDI.Assessment.Api_HostAddress}}/api/assessments/16/topics/15
 
 ###
 ###
@@ -392,11 +389,11 @@ Content-Type: application/json
 
 ###
 
-POST {{ReDI.Assessment.Api_HostAddress}}/api/submissions
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/submissions
 Content-Type: application/json
 
 {
-	"participantCode": "TEST-REFACTOR-001",
+	"participantCode": "publ test",
 	"selfEvaluation": [
     {
       "topicId": 1,
@@ -442,7 +439,23 @@ Content-Type: application/json
 		{
 			"questionId": 18,
 			"questionText": "whatever",
-			"text": "This is a test open answer refactoring 1."
+			"text": "new open answer"
+		}
+	]
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/submissions
+Content-Type: application/json
+
+{
+	"participantCode": "validation-test",
+	"selfEvaluation": [
+		{
+			"topicId": 1,
+			"topicName": "Ignored by backend",
+			"rating": 99
 		}
 	]
 }
@@ -470,10 +483,10 @@ PUT {{ReDI.Assessment.Api_HostAddress}}/api/submissions/18/open-answers/30/evalu
 Content-Type: application/json
 
 {
-	"isCorrect": true
+	"isCorrect": null
 }
 
-			###
+###
 
 PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/submissions/18/open-answers/30/evaluation
 Content-Type: application/json

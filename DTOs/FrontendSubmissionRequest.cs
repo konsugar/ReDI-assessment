@@ -6,6 +6,7 @@ public class FrontendSubmissionRequest
 {
     [Required]
     [MinLength(1)]
+    [MaxLength(100)]
     public string ParticipantCode { get; set; } = string.Empty;
 
     [Required]
@@ -20,6 +21,7 @@ public class FrontendSubmissionRequest
 
 public class FrontendSelfEvaluationRequest
 {
+    [Range(1, int.MaxValue)]
     public int TopicId { get; set; }
 
     // Sent by the current frontend for local display compatibility.
@@ -32,8 +34,10 @@ public class FrontendSelfEvaluationRequest
 
 public class FrontendMultipleChoiceAnswerRequest
 {
+    [Range(1, int.MaxValue)]
     public int QuestionId { get; set; }
 
+    [Range(0, int.MaxValue)]
     public int? SelectedOption { get; set; }
 }
 
@@ -45,5 +49,6 @@ public class FrontendOpenAnswerRequest
     // The backend does not trust this value and uses Question.Text from the database.
     public string QuestionText { get; set; } = string.Empty;
 
+    [MaxLength(4000)]
     public string Text { get; set; } = string.Empty;
 }

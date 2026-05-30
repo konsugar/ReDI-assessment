@@ -14,15 +14,18 @@ public class AssessmentSubmissionsController : ControllerBase
     private readonly AssessmentDbContext _context;
     private readonly SubmissionResponseService _submissionResponseService;
     private readonly OpenAnswerReviewService _openAnswerReviewService;
+    private readonly FrontendSubmissionService _frontendSubmissionService;
 
     public AssessmentSubmissionsController(
         AssessmentDbContext context,
         SubmissionResponseService submissionResponseService,
-        OpenAnswerReviewService openAnswerReviewService)
+        OpenAnswerReviewService openAnswerReviewService,
+        FrontendSubmissionService frontendSubmissionService)
     {
         _context = context;
         _submissionResponseService = submissionResponseService;
         _openAnswerReviewService = openAnswerReviewService;
+        _frontendSubmissionService = frontendSubmissionService;
     }
 
     [HttpGet]
@@ -80,6 +83,40 @@ public class AssessmentSubmissionsController : ControllerBase
         var response = _submissionResponseService.BuildDetails(attempt);
 
         return Ok(response);
+    }
+
+
+    [HttpPost]
+    public async Task<ActionResult<FrontendSubmissionResponse>> CreateSubmission(
+    int assessmentId,
+    FrontendSubmissionRequest request)
+    {
+        var result = await _frontendSubmissionService.CreateAsync(
+            assessmentId,
+            request);
+
+        if (result.Status == FrontendSubmissionCreateStatus.Created)
+        {
+            return Created(
+                $"/api/assessments/{assessmentId}/submissions/{result.AttemptId}",
+                result.Response);
+        }
+
+        if (result.Status == FrontendSubmissionCreateStatus.NotFound)
+        {
+            return NotFound(result.Error);
+        }
+
+        if (result.Status == FrontendSubmissionCreateStatus.NotReady)
+        {
+            return BadRequest(new
+            {
+                message = result.Error,
+                readinessIssues = result.ReadinessIssues
+            });
+        }
+
+        return BadRequest(result.Error);
     }
 
 

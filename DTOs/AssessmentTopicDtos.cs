@@ -12,7 +12,7 @@ public class AssessmentTopicResponse
 
     public string Name { get; set; } = string.Empty;
 
-    public string Description { get; set; } = string.Empty;
+    public string? Description { get; set; }
 
     public int SortOrder { get; set; }
 }
@@ -22,6 +22,12 @@ public class CreateAssessmentTopicRequest
     [Range(1, int.MaxValue)]
     public int TopicId { get; set; }
 
-    [Range(0, 10000)]
+    [Range(0, int.MaxValue)]
+    public int SortOrder { get; set; }
+}
+
+public class UpdateAssessmentTopicRequest
+{
+    [Range(0, int.MaxValue)]
     public int SortOrder { get; set; }
 }

@@ -13,4 +13,6 @@ public class AssessmentSummaryResponse
     public DateTime CreatedUtc { get; set; }
 
     public int QuestionCount { get; set; }
+
+    public bool IsPublished { get; set; }
 }

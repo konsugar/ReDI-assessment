@@ -25,6 +25,12 @@ builder.Services.AddDbContext<AssessmentDbContext>(options =>
 builder.Services.AddScoped<AttemptStatusService>();
 builder.Services.AddScoped<SubmissionResponseService>();
 builder.Services.AddScoped<OpenAnswerReviewService>();
+builder.Services.AddScoped<FrontendQuestionsResponseService>();
+builder.Services.AddScoped<FrontendSubmissionService>();
+builder.Services.AddScoped<FrontendAssessmentSummaryService>();
+builder.Services.AddScoped<FrontendAssessmentReadinessService>();
+builder.Services.AddScoped<AssessmentStructureGuardService>();
+builder.Services.AddScoped<AssessmentContentService>();
 
 builder.Services.AddOpenApi();
 

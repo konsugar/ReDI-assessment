@@ -35,6 +35,18 @@ public class AssessmentDbContext : DbContext
             .WithMany()
             .HasForeignKey(aao => aao.AnswerOptionId)
             .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<Topic>()
+            .HasIndex(topic => topic.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<AssessmentTopic>()
+            .HasIndex(assessmentTopic => new
+            {
+                assessmentTopic.AssessmentId,
+                assessmentTopic.TopicId
+            })
+            .IsUnique();
     }
 
 }

@@ -1,4 +1,6 @@
-﻿namespace ReDI.Assessment.Api.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ReDI.Assessment.Api.Models;
 
 public class AssessmentAttempt
 {
@@ -6,6 +8,7 @@ public class AssessmentAttempt
 
     public int AssessmentId { get; set; }
 
+    [MaxLength(100)]
     public string ParticipantCode { get; set; } = string.Empty;
 
     public Assessment? Assessment { get; set; }

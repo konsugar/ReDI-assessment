@@ -58,7 +58,14 @@ public class OpenAnswerReviewService
             return (false, validationError);
         }
 
-        attemptQuestion.TeacherNote = teacherNote.Trim();
+        var normalizedTeacherNote = teacherNote?.Trim() ?? string.Empty;
+
+        if (normalizedTeacherNote.Length > 2000)
+        {
+            return (false, "Teacher note must be 2000 characters or fewer.");
+        }
+
+        attemptQuestion.TeacherNote = normalizedTeacherNote;
 
         await _context.SaveChangesAsync();
 
