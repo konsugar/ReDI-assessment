@@ -4,11 +4,15 @@ public class AdminSubmissionSummaryResponse
 {
     public int AttemptId { get; set; }
 
+    public int AssessmentId { get; set; }
+
     public string SubmissionId { get; set; } = string.Empty;
 
     public string ParticipantCode { get; set; } = string.Empty;
 
     public DateTime Timestamp { get; set; }
+
+    public DateTime SubmittedUtc { get; set; }
 
     public int Score { get; set; }
 
@@ -23,11 +27,15 @@ public class AdminSubmissionDetailsResponse
 {
     public int AttemptId { get; set; }
 
+    public int AssessmentId { get; set; }
+
     public string SubmissionId { get; set; } = string.Empty;
 
     public string ParticipantCode { get; set; } = string.Empty;
 
     public DateTime Timestamp { get; set; }
+
+    public DateTime SubmittedUtc { get; set; }
 
     public int Score { get; set; }
 

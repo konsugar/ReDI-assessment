@@ -23,8 +23,8 @@ builder.Services.AddDbContext<AssessmentDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<AttemptStatusService>();
-
 builder.Services.AddScoped<SubmissionResponseService>();
+builder.Services.AddScoped<OpenAnswerReviewService>();
 
 builder.Services.AddOpenApi();
 

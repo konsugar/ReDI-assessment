@@ -15,13 +15,16 @@ public class AttemptsController : ControllerBase
 {
     private readonly AssessmentDbContext _context;
     private readonly AttemptStatusService _attemptStatusService;
+    private readonly OpenAnswerReviewService _openAnswerReviewService;
 
     public AttemptsController(
     AssessmentDbContext context,
-    AttemptStatusService attemptStatusService)
+    AttemptStatusService attemptStatusService,
+    OpenAnswerReviewService openAnswerReviewService)
     {
         _context = context;
         _attemptStatusService = attemptStatusService;
+        _openAnswerReviewService = openAnswerReviewService;
     }
 
     [HttpGet("{attemptId:int}")]
@@ -48,14 +51,6 @@ public class AttemptsController : ControllerBase
             AssessmentId = attempt.AssessmentId,
             StartedUtc = attempt.StartedUtc,
             EndsUtc = attempt.EndsUtc,
-            //CurrentUtc = currentUtc,
-            //RemainingSeconds = attempt.EndsUtc == null || isSubmitted
-            //    ? null
-            //    : Math.Max(0, (int)(attempt.EndsUtc.Value - currentUtc).TotalSeconds),
-            //Status = status,
-            //SubmittedUtc = attempt.SubmittedUtc,
-            //IsSubmitted = isSubmitted,
-            //IsExpired = isExpired,
             CurrentUtc = statusInfo.CurrentUtc,
             RemainingSeconds = statusInfo.RemainingSeconds,
             Status = statusInfo.Status,
@@ -107,22 +102,6 @@ public class AttemptsController : ControllerBase
         }
 
         var statusInfo = _attemptStatusService.GetStatus(attempt);
-
-        //var response = new AttemptStatusResponse
-        //{
-        //    AttemptId = attempt.Id,
-        //    AssessmentId = attempt.AssessmentId,
-        //    StartedUtc = attempt.StartedUtc,
-        //    EndsUtc = attempt.EndsUtc,
-        //    CurrentUtc = currentUtc,
-        //    RemainingSeconds = attempt.EndsUtc == null || isSubmitted
-        //        ? null
-        //        : Math.Max(0, (int)(attempt.EndsUtc.Value - currentUtc).TotalSeconds),
-        //    Status = status,
-        //    SubmittedUtc = attempt.SubmittedUtc,
-        //    IsSubmitted = isSubmitted,
-        //    IsExpired = isExpired
-        //};
 
         var response = new AttemptStatusResponse
         {
@@ -249,33 +228,47 @@ public class AttemptsController : ControllerBase
     int attemptQuestionId,
     EvaluateAttemptQuestionRequest request)
     {
-        var attemptQuestion = await _context.AttemptQuestions
-            .Include(attemptQuestion => attemptQuestion.AssessmentAttempt)
-            .Include(attemptQuestion => attemptQuestion.Question)
-            .FirstOrDefaultAsync(attemptQuestion =>
-                attemptQuestion.Id == attemptQuestionId &&
-                attemptQuestion.AssessmentAttemptId == attemptId);
+        var result = await _openAnswerReviewService.EvaluateAsync(
+            attemptId,
+            attemptQuestionId,
+            request.IsCorrect);
 
-        if (attemptQuestion == null)
+        if (result.Success)
+        {
+            return NoContent();
+        }
+
+        if (result.Error == "NotFound")
         {
             return NotFound();
         }
 
-        if (attemptQuestion.AssessmentAttempt.SubmittedUtc == null)
+        return BadRequest(result.Error);
+    }
+
+
+    [HttpPut("{attemptId:int}/questions/{attemptQuestionId:int}/teacher-note")]
+    public async Task<IActionResult> UpdateTeacherNote(
+    int attemptId,
+    int attemptQuestionId,
+    UpdateTeacherNoteRequest request)
+    {
+        var result = await _openAnswerReviewService.UpdateTeacherNoteAsync(
+            attemptId,
+            attemptQuestionId,
+            request.TeacherNote);
+
+        if (result.Success)
         {
-            return BadRequest("This attempt has not been submitted yet.");
+            return NoContent();
         }
 
-        if (attemptQuestion.Question.QuestionType != QuestionType.TextInput)
+        if (result.Error == "NotFound")
         {
-            return BadRequest("Only TextInput questions can be evaluated manually.");
+            return NotFound();
         }
 
-        attemptQuestion.IsCorrect = request.IsCorrect;
-
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        return BadRequest(result.Error);
     }
 
 

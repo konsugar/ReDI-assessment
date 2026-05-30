@@ -19,4 +19,6 @@ public class AttemptQuestion
     // Null means the answer has not been evaluated yet.
     // This is mainly used for free-text answers in the MVP.
     public bool? IsCorrect { get; set; }
+
+    public string TeacherNote { get; set; } = string.Empty;
 }

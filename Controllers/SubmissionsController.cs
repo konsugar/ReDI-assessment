@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using ReDI.Assessment.Api.Data;
-
 using Microsoft.EntityFrameworkCore;
+
+using ReDI.Assessment.Api.Data;
 using ReDI.Assessment.Api.DTOs;
-
 using ReDI.Assessment.Api.Models;
-
 using ReDI.Assessment.Api.Services;
 
 namespace ReDI.Assessment.Api.Controllers;
@@ -17,15 +15,18 @@ public class SubmissionsController : ControllerBase
     private readonly AssessmentDbContext _context;
     private readonly IConfiguration _configuration;
     private readonly SubmissionResponseService _submissionResponseService;
+    private readonly OpenAnswerReviewService _openAnswerReviewService;
 
     public SubmissionsController(
         AssessmentDbContext context,
         IConfiguration configuration,
-        SubmissionResponseService submissionResponseService)
+        SubmissionResponseService submissionResponseService,
+        OpenAnswerReviewService openAnswerReviewService)
     {
         _context = context;
         _configuration = configuration;
         _submissionResponseService = submissionResponseService;
+        _openAnswerReviewService = openAnswerReviewService;
     }
 
     private int GetFrontendAssessmentId()
@@ -77,42 +78,6 @@ public class SubmissionsController : ControllerBase
                 attempt.SubmittedUtc != null)
             .OrderByDescending(attempt => attempt.SubmittedUtc)
             .ToListAsync();
-
-        //var response = attempts
-        //    .Select(attempt =>
-        //    {
-        //        var scoredQuestions = attempt.AttemptQuestions
-        //            .Where(attemptQuestion => attemptQuestion.Question.QuestionType == QuestionType.SingleChoice)
-        //            .ToList();
-
-        //        var score = scoredQuestions
-        //            .Count(attemptQuestion => attemptQuestion.IsCorrect == true);
-
-        //        var total = scoredQuestions.Count;
-
-        //        return new AdminSubmissionSummaryResponse
-        //        {
-        //            AttemptId = attempt.Id,
-        //            SubmissionId = attempt.Id.ToString(),
-        //            ParticipantCode = attempt.ParticipantCode,
-        //            Timestamp = attempt.SubmittedUtc!.Value,
-        //            Score = score,
-        //            Total = total,
-        //            Percentage = total == 0
-        //                ? 0
-        //                : (int)Math.Round((double)score / total * 100),
-        //            SelfEvaluation = attempt.SelfEvaluations
-        //                .OrderBy(selfEvaluation => selfEvaluation.TopicId)
-        //                .Select(selfEvaluation => new FrontendSelfEvaluationResponse
-        //                {
-        //                    TopicId = selfEvaluation.TopicId,
-        //                    TopicName = selfEvaluation.TopicName,
-        //                    Rating = selfEvaluation.Rating
-        //                })
-        //                .ToList()
-        //        };
-        //    })
-        //    .ToList();
 
         var response = attempts
             .Select(attempt => _submissionResponseService.BuildSummary(attempt))
@@ -169,84 +134,6 @@ public class SubmissionsController : ControllerBase
         {
             return NotFound();
         }
-
-        //var choiceAttemptQuestions = attempt.AttemptQuestions
-        //    .Where(attemptQuestion => attemptQuestion.Question.QuestionType == QuestionType.SingleChoice)
-        //    .OrderBy(attemptQuestion => attemptQuestion.Question.SortOrder)
-        //    .ThenBy(attemptQuestion => attemptQuestion.QuestionId)
-        //    .ToList();
-
-        //var openAttemptQuestions = attempt.AttemptQuestions
-        //    .Where(attemptQuestion => attemptQuestion.Question.QuestionType == QuestionType.TextInput)
-        //    .OrderBy(attemptQuestion => attemptQuestion.Question.SortOrder)
-        //    .ThenBy(attemptQuestion => attemptQuestion.QuestionId)
-        //    .ToList();
-
-        //var questionResults = choiceAttemptQuestions
-        //    .Select(attemptQuestion =>
-        //    {
-        //        var answerOptions = GetOrderedAnswerOptions(attemptQuestion.Question);
-        //        var selectedAnswerOptionId = attemptQuestion.SelectedAnswerOptions
-        //            .Select(selectedAnswerOption => selectedAnswerOption.AnswerOptionId)
-        //            .FirstOrDefault();
-
-        //        var selectedOption = selectedAnswerOptionId == 0
-        //            ? (int?)null
-        //            : answerOptions.FindIndex(answerOption => answerOption.Id == selectedAnswerOptionId);
-
-        //        if (selectedOption < 0)
-        //        {
-        //            selectedOption = null;
-        //        }
-
-        //        return new FrontendQuestionResultResponse
-        //        {
-        //            QuestionId = attemptQuestion.QuestionId,
-        //            QuestionText = attemptQuestion.Question.Text,
-        //            Options = answerOptions
-        //                .Select(answerOption => answerOption.Text)
-        //                .ToList(),
-        //            SelectedOption = selectedOption,
-        //            CorrectIndex = GetCorrectIndex(answerOptions),
-        //            Correct = attemptQuestion.IsCorrect == true
-        //        };
-        //    })
-        //    .ToList();
-
-        //var score = questionResults.Count(result => result.Correct);
-        //var total = questionResults.Count;
-        //var percentage = total == 0
-        //    ? 0
-        //    : (int)Math.Round((double)score / total * 100);
-
-        //var response = new AdminSubmissionDetailsResponse
-        //{
-        //    AttemptId = attempt.Id,
-        //    SubmissionId = attempt.Id.ToString(),
-        //    ParticipantCode = attempt.ParticipantCode,
-        //    Timestamp = attempt.SubmittedUtc!.Value,
-        //    Score = score,
-        //    Total = total,
-        //    Percentage = percentage,
-        //    QuestionResults = questionResults,
-        //    SelfEvaluation = attempt.SelfEvaluations
-        //        .OrderBy(selfEvaluation => selfEvaluation.TopicId)
-        //        .Select(selfEvaluation => new FrontendSelfEvaluationResponse
-        //        {
-        //            TopicId = selfEvaluation.TopicId,
-        //            TopicName = selfEvaluation.TopicName,
-        //            Rating = selfEvaluation.Rating
-        //        })
-        //        .ToList(),
-        //    OpenAnswers = openAttemptQuestions
-        //        .Select(attemptQuestion => new FrontendOpenAnswerResponse
-        //        {
-        //            QuestionId = attemptQuestion.QuestionId,
-        //            QuestionText = attemptQuestion.Question.Text,
-        //            Text = attemptQuestion.AnswerText ?? string.Empty
-        //        })
-        //        .ToList()
-        //};
 
         var response = _submissionResponseService.BuildDetails(attempt);
 
@@ -469,25 +356,13 @@ public class SubmissionsController : ControllerBase
                 QuestionId = question.Id,
                 IsCorrect = isCorrect,
                 SelectedAnswerOptions = new List<AttemptAnswerOption>
-        {
-            new AttemptAnswerOption
-            {
-                AnswerOptionId = selectedAnswerOption.Id
-            }
-        }
+                {
+                    new AttemptAnswerOption
+                    {
+                        AnswerOptionId = selectedAnswerOption.Id
+                    }
+                }
             });
-
-            //questionResults.Add(new FrontendQuestionResultResponse
-            //{
-            //    QuestionId = question.Id,
-            //    QuestionText = question.Text,
-            //    Options = answerOptions
-            //        .Select(answerOption => answerOption.Text)
-            //        .ToList(),
-            //    SelectedOption = answer.SelectedOption,
-            //    CorrectIndex = correctIndex,
-            //    Correct = isCorrect
-            //});
         }
 
         foreach (var question in openQuestions)
@@ -504,44 +379,6 @@ public class SubmissionsController : ControllerBase
 
         _context.AssessmentAttempts.Add(attempt);
         await _context.SaveChangesAsync();
-
-        //var score = questionResults.Count(result => result.Correct);
-        //var total = questionResults.Count;
-        //var percentage = total == 0
-        //    ? 0
-        //    : (int)Math.Round((double)score / total * 100);
-
-        //var response = new FrontendSubmissionResponse
-        //{
-        //    SubmissionId = attempt.Id.ToString(),
-        //    ParticipantCode = attempt.ParticipantCode,
-        //    Score = score,
-        //    Total = total,
-        //    Percentage = percentage,
-        //    QuestionResults = questionResults,
-        //    SelfEvaluation = request.SelfEvaluation
-        //        .OrderBy(selfEvaluation => selfEvaluation.TopicId)
-        //        .Select(selfEvaluation => new FrontendSelfEvaluationResponse
-        //        {
-        //            TopicId = selfEvaluation.TopicId,
-        //            TopicName = topicsById[selfEvaluation.TopicId].Name,
-        //            Rating = selfEvaluation.Rating
-        //        })
-        //        .ToList(),
-        //    OpenAnswers = openQuestions
-        //        .Select(question =>
-        //        {
-        //            openAnswersByQuestionId.TryGetValue(question.Id, out var answer);
-
-        //            return new FrontendOpenAnswerResponse
-        //            {
-        //                QuestionId = question.Id,
-        //                QuestionText = question.Text,
-        //                Text = answer?.Text ?? string.Empty
-        //            };
-        //        })
-        //        .ToList()
-        //};
 
         var savedAttemptId = attempt.Id;
 
@@ -562,4 +399,76 @@ public class SubmissionsController : ControllerBase
             new { attemptId = savedAttemptId },
             response);
     }
+
+
+    [HttpPut("{submissionId:int}/open-answers/{attemptQuestionId:int}/evaluation")]
+    public async Task<IActionResult> EvaluateOpenAnswer(
+    int submissionId,
+    int attemptQuestionId,
+    EvaluateAttemptQuestionRequest request)
+    {
+        if (!await SubmissionBelongsToCurrentAssessmentAsync(submissionId))
+        {
+            return NotFound();
+        }
+
+        var result = await _openAnswerReviewService.EvaluateAsync(
+            submissionId,
+            attemptQuestionId,
+            request.IsCorrect);
+
+        if (result.Success)
+        {
+            return NoContent();
+        }
+
+        if (result.Error == "NotFound")
+        {
+            return NotFound();
+        }
+
+        return BadRequest(result.Error);
+    }
+
+
+    [HttpPut("{submissionId:int}/open-answers/{attemptQuestionId:int}/teacher-note")]
+    public async Task<IActionResult> UpdateOpenAnswerTeacherNote(
+    int submissionId,
+    int attemptQuestionId,
+    UpdateTeacherNoteRequest request)
+    {
+        if (!await SubmissionBelongsToCurrentAssessmentAsync(submissionId))
+        {
+            return NotFound();
+        }
+
+        var result = await _openAnswerReviewService.UpdateTeacherNoteAsync(
+            submissionId,
+            attemptQuestionId,
+            request.TeacherNote);
+
+        if (result.Success)
+        {
+            return NoContent();
+        }
+
+        if (result.Error == "NotFound")
+        {
+            return NotFound();
+        }
+
+        return BadRequest(result.Error);
+    }
+
+
+    private async Task<bool> SubmissionBelongsToCurrentAssessmentAsync(int submissionId)
+    {
+        var assessmentId = _configuration.GetValue<int>("FrontendAssessment:AssessmentId");
+
+        return await _context.AssessmentAttempts
+            .AnyAsync(attempt =>
+                attempt.Id == submissionId &&
+                attempt.AssessmentId == assessmentId);
+    }
+
 }

@@ -176,6 +176,10 @@ namespace ReDI.Assessment.Api.Migrations
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
+                    b.Property<string>("TeacherNote")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AssessmentAttemptId");

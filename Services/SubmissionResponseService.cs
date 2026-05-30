@@ -14,9 +14,11 @@ public class SubmissionResponseService
         return new AdminSubmissionSummaryResponse
         {
             AttemptId = attempt.Id,
+            AssessmentId = attempt.AssessmentId,
             SubmissionId = attempt.Id.ToString(),
             ParticipantCode = attempt.ParticipantCode,
             Timestamp = attempt.SubmittedUtc!.Value,
+            SubmittedUtc = attempt.SubmittedUtc!.Value,
             Score = score,
             Total = total,
             Percentage = CalculatePercentage(score, total),
@@ -33,9 +35,11 @@ public class SubmissionResponseService
         return new AdminSubmissionDetailsResponse
         {
             AttemptId = attempt.Id,
+            AssessmentId = attempt.AssessmentId,
             SubmissionId = attempt.Id.ToString(),
             ParticipantCode = attempt.ParticipantCode,
             Timestamp = attempt.SubmittedUtc!.Value,
+            SubmittedUtc = attempt.SubmittedUtc!.Value,
             Score = score,
             Total = total,
             Percentage = CalculatePercentage(score, total),
@@ -125,9 +129,17 @@ public class SubmissionResponseService
             .ThenBy(attemptQuestion => attemptQuestion.QuestionId)
             .Select(attemptQuestion => new FrontendOpenAnswerResponse
             {
+                AttemptQuestionId = attemptQuestion.Id,
                 QuestionId = attemptQuestion.QuestionId,
                 QuestionText = attemptQuestion.Question.Text,
-                Text = attemptQuestion.AnswerText ?? string.Empty
+                Text = attemptQuestion.AnswerText ?? string.Empty,
+                IsCorrect = attemptQuestion.IsCorrect,
+                EvaluationStatus = attemptQuestion.IsCorrect == null
+                    ? "NotEvaluated"
+                    : attemptQuestion.IsCorrect == true
+                        ? "Correct"
+                        : "Incorrect",
+                TeacherNote = attemptQuestion.TeacherNote
             })
             .ToList();
     }

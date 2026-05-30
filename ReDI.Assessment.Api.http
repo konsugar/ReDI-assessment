@@ -196,7 +196,7 @@ GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/13/attempts
 
 ###
 
-GET {{ReDI.Assessment.Api_HostAddress}}/api/attempts/4
+GET {{ReDI.Assessment.Api_HostAddress}}/api/attempts/18
 
 ###
 
@@ -256,11 +256,38 @@ Content-Type: application/json
 
 ###
 
-PUT {{ReDI.Assessment.Api_HostAddress}}/api/attempts/11/questions/14/evaluation
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/attempts/18/questions/30/teacher-note
 Content-Type: application/json
 
 {
-	"isCorrect": true
+	"teacherNote": "Cleanup smoke test"
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/submissions/18/open-answers/30/teacher-note
+Content-Type: application/json
+
+{
+	"teacherNote": "Assessment-specific route test note."
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/submissions/18/open-answers/30/teacher-note
+Content-Type: application/json
+
+{
+	"teacherNote": "Admin-friendly route test note."
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/attempts/18/questions/30/evaluation
+Content-Type: application/json
+
+{
+	"isCorrect": false
 }
 
 ###
@@ -420,3 +447,37 @@ Content-Type: application/json
 	]
 }
 
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/submissions
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/submissions/details
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/attempts/18/questions/30/evaluation
+Content-Type: application/json
+
+{
+	"isCorrect": true
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/submissions/18/open-answers/30/evaluation
+Content-Type: application/json
+
+{
+	"isCorrect": true
+}
+
+			###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/14/submissions/18/open-answers/30/evaluation
+Content-Type: application/json
+
+{
+	"isCorrect": false
+}

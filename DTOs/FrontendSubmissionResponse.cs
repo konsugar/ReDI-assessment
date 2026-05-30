@@ -45,9 +45,17 @@ public class FrontendSelfEvaluationResponse
 
 public class FrontendOpenAnswerResponse
 {
+    public int AttemptQuestionId { get; set; }
+
     public int QuestionId { get; set; }
 
     public string QuestionText { get; set; } = string.Empty;
 
     public string Text { get; set; } = string.Empty;
+
+    public bool? IsCorrect { get; set; }
+
+    public string EvaluationStatus { get; set; } = string.Empty;
+
+    public string TeacherNote { get; set; } = string.Empty;
 }
