@@ -1,7 +1,7 @@
 // ─── Configuration ────────────────────────────────────────────────────────────
 const CONFIG = {
-  apiBase: 'http://localhost:5000/api',
-  useMock: true   // set to false when backend is ready
+    apiBase: 'https://localhost:7101/api',
+    useMock: false
 };
 
 const QUESTIONS_KEY = 'redi_questions';
