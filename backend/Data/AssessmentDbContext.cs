@@ -47,6 +47,8 @@ public class AssessmentDbContext : DbContext
                 assessmentTopic.TopicId
             })
             .IsUnique();
+
+        modelBuilder.SeedDemoData();
     }
 
 }
