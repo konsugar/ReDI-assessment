@@ -1,4 +1,6 @@
-﻿namespace ReDI.Assessment.Api.DTOs;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ReDI.Assessment.Api.DTOs;
 
 public class AdminSubmissionSummaryResponse
 {
@@ -48,4 +50,15 @@ public class AdminSubmissionDetailsResponse
     public List<FrontendSelfEvaluationResponse> SelfEvaluation { get; set; } = new();
 
     public List<FrontendOpenAnswerResponse> OpenAnswers { get; set; } = new();
+}
+
+public class EvaluateAttemptQuestionRequest
+{
+    public bool? IsCorrect { get; set; }
+}
+
+public class UpdateTeacherNoteRequest
+{
+    [MaxLength(2000)]
+    public string TeacherNote { get; set; } = string.Empty;
 }
