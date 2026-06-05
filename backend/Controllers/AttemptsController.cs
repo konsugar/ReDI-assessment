@@ -5,11 +5,15 @@ using ReDI.Assessment.Api.DTOs;
 using ReDI.Assessment.Api.Models;
 using ReDI.Assessment.Api.Services;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace ReDI.Assessment.Api.Controllers;
 
 // general attempts controller
 
 [ApiController]
+[Authorize]
+
 [Route("api/attempts")]
 public class AttemptsController : ControllerBase
 {

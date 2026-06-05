@@ -2,6 +2,11 @@ using Microsoft.EntityFrameworkCore;
 using ReDI.Assessment.Api.Data;
 using ReDI.Assessment.Api.Services;
 
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using ReDI.Assessment.Api.Settings;
+
 var builder = WebApplication.CreateBuilder(args);
 
 const string DevelopmentCorsPolicy = "DevelopmentCorsPolicy";
@@ -34,6 +39,34 @@ builder.Services.AddScoped<AssessmentContentService>();
 
 builder.Services.AddOpenApi();
 
+builder.Services.Configure<AdminAuthSettings>(
+    builder.Configuration.GetSection("AdminAuth")
+);
+
+var adminAuthSettings = builder.Configuration
+    .GetSection("AdminAuth")
+    .Get<AdminAuthSettings>() ?? new AdminAuthSettings();
+
+var jwtSecretBytes = Encoding.UTF8.GetBytes(adminAuthSettings.JwtSecret);
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = adminAuthSettings.Issuer,
+            ValidAudience = adminAuthSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(jwtSecretBytes)
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -53,6 +86,7 @@ if (app.Environment.IsDevelopment())
     app.UseCors(DevelopmentCorsPolicy);
 }
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

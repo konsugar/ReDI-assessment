@@ -6,9 +6,13 @@ using ReDI.Assessment.Api.DTOs;
 using ReDI.Assessment.Api.Models;
 using ReDI.Assessment.Api.Services;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace ReDI.Assessment.Api.Controllers;
 
 [ApiController]
+[Authorize]
+
 [Route("api/assessments/{assessmentId:int}/questions")]
 public class QuestionsController : ControllerBase
 {

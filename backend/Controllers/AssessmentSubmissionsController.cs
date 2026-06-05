@@ -5,9 +5,13 @@ using ReDI.Assessment.Api.Data;
 using ReDI.Assessment.Api.DTOs;
 using ReDI.Assessment.Api.Services;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace ReDI.Assessment.Api.Controllers;
 
 [ApiController]
+[Authorize]
+
 [Route("api/assessments/{assessmentId:int}/submissions")]
 public class AssessmentSubmissionsController : ControllerBase
 {
@@ -85,7 +89,7 @@ public class AssessmentSubmissionsController : ControllerBase
         return Ok(response);
     }
 
-
+    [AllowAnonymous]
     [HttpPost]
     public async Task<ActionResult<FrontendSubmissionResponse>> CreateSubmission(
     int assessmentId,

@@ -6,9 +6,13 @@ using ReDI.Assessment.Api.DTOs;
 using ReDI.Assessment.Api.Models;
 using ReDI.Assessment.Api.Services;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace ReDI.Assessment.Api.Controllers;
 
 [ApiController]
+[Authorize]
+
 [Route("api/[controller]")]
 public class SubmissionsController : ControllerBase
 {
@@ -36,32 +40,6 @@ public class SubmissionsController : ControllerBase
     {
         return _configuration.GetValue<int>("FrontendAssessment:AssessmentId");
     }
-
-    //private static bool IsFrontendChoiceQuestion(Question question)
-    //{
-    //    // The current frontend quiz uses radio buttons and sends one selected option index, though it mentions "multiple".
-    //    // It maps to SingleChoice in the backend.
-    //    // Backend MultipleChoice can be supported later with checkbox UI and array payload.
-    //    return question.QuestionType == QuestionType.SingleChoice;
-    //}
-
-    //private static bool IsFrontendOpenQuestion(Question question)
-    //{
-    //    return question.QuestionType == QuestionType.TextInput;
-    //}
-
-    //private static List<AnswerOption> GetOrderedAnswerOptions(Question question)
-    //{
-    //    return question.AnswerOptions
-    //        .OrderBy(answerOption => answerOption.SortOrder)
-    //        .ThenBy(answerOption => answerOption.Id)
-    //        .ToList();
-    //}
-
-    //private static int GetCorrectIndex(List<AnswerOption> answerOptions)
-    //{
-    //    return answerOptions.FindIndex(answerOption => answerOption.IsCorrect);
-    //}
 
 
     [HttpGet]
@@ -143,7 +121,7 @@ public class SubmissionsController : ControllerBase
         return Ok(response);
     }
 
-
+    [AllowAnonymous]
     [HttpPost]
     public async Task<ActionResult<FrontendSubmissionResponse>> CreateSubmission(
     FrontendSubmissionRequest request)
