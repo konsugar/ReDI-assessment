@@ -96,6 +96,24 @@ GET /api/frontend-assessments/current
 
 Assessment-specific endpoints are available when the frontend or admin UI works with an explicit `assessmentId`.
 
+### Admin authentication
+
+Development admin credentials are configured in `appsettings.Development.json`:
+
+```json
+"AdminAuth": {
+	"Username": "admin",
+	"Password": "admin-dev-password",
+	"JwtSecret": "local-development-only-admin-auth-secret-key-change-before-production",
+	"Issuer": "ReDI.Assessment.Api",
+	"Audience": "ReDI.Assessment.Admin",
+	"TokenLifetimeMinutes": 120
+}
+```
+
+These values are for local development only. For external hosting, admin credentials and JWT secret must be provided through environment variables or hosting secrets.
+
+
 ## Main API areas
 
 ### Student frontend
@@ -118,6 +136,19 @@ Launchable assessments:
 
 ```text
 GET /api/frontend-assessments/launchable
+```
+
+### Admin authentication
+
+```text
+POST /api/admin/auth/login
+```
+
+Successful login returns a JWT access token.
+
+Admin requests must include:
+```
+Authorization: Bearer <accessToken>
 ```
 
 ### Admin assessment status
@@ -230,6 +261,39 @@ It contains:
 - error-handling notes
 - localStorage migration rules
 
+
+## Authentication rules
+
+Public endpoints:
+
+```text
+POST /api/admin/auth/login
+GET /api/questions
+POST /api/submissions
+GET /api/assessments/{assessmentId}/frontend-questions
+POST /api/assessments/{assessmentId}/submissions
+GET /api/frontend-assessments/launchable
+```
+
+Protected admin endpoints require:
+```
+Authorization: Bearer <accessToken>
+```
+
+Protected areas include:
+
+```
+/api/assessments...
+/api/topics...
+/api/questions/{questionId}/answer-options...
+/api/submissions...
+/api/assessments/{assessmentId}/submissions...
+/api/attempts...
+/api/frontend-assessments
+/api/frontend-assessments/{assessmentId}
+/api/frontend-assessments/current
+```
+
 ## Important business rules
 
 ### Publication and launchability
@@ -313,8 +377,10 @@ canLaunchFrontend = false
 
 ## Current MVP limitations
 
-- Authentication and authorization are not implemented yet.
-- Admin endpoints are not protected yet.
+- Minimal admin authentication is implemented with JWT Bearer tokens.
+- Admin credentials are currently configured through application settings.
+- There is no full user/role system yet.
+- Student accounts are not implemented yet; student flow currently uses `participantCode`.
 - Error responses are not fully standardized yet: some errors are plain text, some are JSON.
 - Topics are optional for MVP launch readiness.
 - `TextInput` questions are optional.
