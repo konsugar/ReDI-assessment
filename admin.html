@@ -9,18 +9,20 @@
 </head>
 <body>
 
-  <header class="admin-header">
-    <div class="admin-header-inner">
-      <span class="admin-logo">
-        <img src="./logo/logo_long.png" alt="ReDI School">
-      </span>
-      <span class="admin-header-label">Teacher Dashboard</span>
-    </div>
-    <nav class="admin-tabs" role="tablist">
-      <button class="admin-tab active" data-tab="submissions" role="tab" aria-selected="true">Submissions</button>
-      <button class="admin-tab" data-tab="questions" role="tab" aria-selected="false">Manage Questions</button>
-    </nav>
-  </header>
+    <header class="admin-header">
+        <div class="admin-header-inner">
+            <span class="admin-logo">
+                <img src="./logo/logo_long.png" alt="ReDI School">
+            </span>
+            <span class="admin-header-label">Teacher Dashboard</span>
+        </div>
+        <!--<nav class="admin-tabs" role="tablist">-->
+        <nav id="admin-tabs-nav" class="admin-tabs hidden" role="tablist">
+            <button class="admin-tab active" data-tab="submissions" role="tab" aria-selected="true">Submissions</button>
+            <button class="admin-tab" data-tab="questions" role="tab" aria-selected="false">Manage Questions</button>
+            <button id="btn-logout" class="admin-logout" type="button">Logout</button>
+        </nav>
+    </header>
 
   <main class="admin-main">
 

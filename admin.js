@@ -66,6 +66,27 @@ async function loginAdmin(username, password) {
     setAdminToken(data.accessToken);
 }
 
+// function initLogin() {
+//     const form = document.getElementById('admin-login-form');
+//     const error = document.getElementById('admin-login-error');
+
+//     form.addEventListener('submit', async e => {
+//         e.preventDefault();
+
+//         const username = document.getElementById('admin-username').value.trim();
+//         const password = document.getElementById('admin-password').value;
+
+//         try {
+//             await loginAdmin(username, password);
+//             showAdminApp();
+//             await initAdminData();
+//         } catch (err) {
+//             error.textContent = 'Login failed. Please check your credentials.';
+//             error.classList.remove('hidden');
+//         }
+//     });
+// }
+
 function initLogin() {
     const form = document.getElementById('admin-login-form');
     const error = document.getElementById('admin-login-error');
@@ -85,16 +106,31 @@ function initLogin() {
             error.classList.remove('hidden');
         }
     });
+
+    document.getElementById('btn-logout').addEventListener('click', logoutAdmin);
 }
 
 function showLoginScreen() {
     document.getElementById('admin-login-screen').classList.remove('hidden');
     document.getElementById('admin-app').classList.add('hidden');
+    document.getElementById('admin-tabs-nav').classList.add('hidden');
 }
 
 function showAdminApp() {
     document.getElementById('admin-login-screen').classList.add('hidden');
     document.getElementById('admin-app').classList.remove('hidden');
+    document.getElementById('admin-tabs-nav').classList.remove('hidden');
+}
+
+function logoutAdmin() {
+    clearAdminToken();
+    showLoginScreen();
+
+    document.getElementById('table-body').innerHTML = '';
+    document.getElementById('detail-container').innerHTML = '';
+    document.getElementById('section-table').classList.add('hidden');
+    document.getElementById('section-detail').classList.add('hidden');
+    document.getElementById('empty-state').classList.add('hidden');
 }
 
 async function initApp() {

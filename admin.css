@@ -85,6 +85,26 @@ body {
   color: var(--white);
 }
 
+.admin-logout {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--red);
+    cursor: pointer;
+    border-radius: var(--radius);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    margin-left: 8px;
+}
+
+    .admin-logout:hover {
+        background: var(--red);
+        border-color: var(--red);
+        color: var(--white);
+    }
+
 .tab-actions {
   display: flex;
   flex-wrap: wrap;
@@ -113,6 +133,79 @@ body {
   margin: 0 auto;
   padding: 40px 24px 80px;
 }
+
+/* ─── Admin login ───────────────────────────────────────────────────────────── */
+.admin-login {
+    display: flex;
+    justify-content: center;
+}
+
+    .admin-login form {
+        width: 100%;
+        max-width: 420px;
+        background: var(--white);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 40px;
+    }
+
+    .admin-login h1 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--teal);
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .admin-login label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 16px;
+    }
+
+    .admin-login input {
+        width: 100%;
+        margin-top: 6px;
+        padding: 10px 12px;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius);
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--text);
+        outline: none;
+        transition: border-color 0.15s;
+    }
+
+        .admin-login input:focus {
+            border-color: var(--teal);
+        }
+
+    .admin-login .field-error {
+        color: var(--red);
+        font-size: 13px;
+        margin-bottom: 16px;
+        text-align: center;
+    }
+
+    .admin-login button[type="submit"] {
+        width: 100%;
+        background: var(--teal);
+        color: var(--white);
+        border: none;
+        border-radius: var(--radius);
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+        .admin-login button[type="submit"]:hover {
+            background: #2f4f5d;
+        }
 
 /* ─── Empty state ────────────────────────────────────────────────────────────── */
 .empty-state {
