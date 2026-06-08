@@ -1,3 +1,118 @@
+const CONFIG = {
+    apiBase: 'https://localhost:7101/api',
+    useBackend: true,
+    authTokenKey: 'redi_admin_token'
+};
+
+function getAdminToken() {
+    return sessionStorage.getItem(CONFIG.authTokenKey);
+}
+
+function setAdminToken(token) {
+    sessionStorage.setItem(CONFIG.authTokenKey, token);
+}
+
+function clearAdminToken() {
+    sessionStorage.removeItem(CONFIG.authTokenKey);
+}
+
+async function authFetch(url, options = {}) {
+    const token = getAdminToken();
+
+    const headers = {
+        ...(options.headers || {})
+    };
+
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+
+    const res = await fetch(url, {
+        ...options,
+        headers
+    });
+
+    if (res.status === 401 || res.status === 403) {
+        clearAdminToken();
+        showLoginScreen();
+        throw new Error('Unauthorized');
+    }
+
+    return res;
+}
+
+async function loginAdmin(username, password) {
+    const res = await fetch(`${CONFIG.apiBase}/admin/auth/login`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            username,
+            password
+        })
+    });
+
+    if (!res.ok) {
+        throw new Error('Invalid username or password');
+    }
+
+    const data = await res.json();
+
+    if (!data.accessToken) {
+        throw new Error('Login response does not contain accessToken');
+    }
+
+    setAdminToken(data.accessToken);
+}
+
+function initLogin() {
+    const form = document.getElementById('admin-login-form');
+    const error = document.getElementById('admin-login-error');
+
+    form.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        const username = document.getElementById('admin-username').value.trim();
+        const password = document.getElementById('admin-password').value;
+
+        try {
+            await loginAdmin(username, password);
+            showAdminApp();
+            await initAdminData();
+        } catch (err) {
+            error.textContent = 'Login failed. Please check your credentials.';
+            error.classList.remove('hidden');
+        }
+    });
+}
+
+function showLoginScreen() {
+    document.getElementById('admin-login-screen').classList.remove('hidden');
+    document.getElementById('admin-app').classList.add('hidden');
+}
+
+function showAdminApp() {
+    document.getElementById('admin-login-screen').classList.add('hidden');
+    document.getElementById('admin-app').classList.remove('hidden');
+}
+
+async function initApp() {
+    initLogin();
+
+    if (!getAdminToken()) {
+        showLoginScreen();
+        return;
+    }
+
+    showAdminApp();
+    await initAdminData();
+}
+
+//
+// main admin logic
+//
+
 const STORAGE_KEY = 'redi_submissions';
 const NOTES_KEY = 'redi_teacher_notes';
 const QUESTIONS_KEY = 'redi_questions';
@@ -11,8 +126,22 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-function loadSubmissions() {
-  return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+// function loadSubmissions() {
+//   return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+// }
+
+async function loadSubmissions() {
+    if (!CONFIG.useBackend) {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    }
+
+    const res = await authFetch(`${CONFIG.apiBase}/submissions/details`);
+
+    if (!res.ok) {
+        throw new Error('Failed to load submissions');
+    }
+
+    return await res.json();
 }
 
 function loadNotes() {
@@ -616,26 +745,61 @@ function resetQuestions() {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-function init() {
+async function initAdminData() {
   // Tabs
   document.querySelectorAll('.admin-tab').forEach(t => {
     t.addEventListener('click', () => activateTab(t.dataset.tab));
   });
 
   // Submissions
-  const submissions = loadSubmissions();
-  if (!submissions.length) {
-    document.getElementById('empty-state').classList.remove('hidden');
-  } else {
-    document.getElementById('submission-count').textContent = submissions.length;
-    document.getElementById('section-table').classList.remove('hidden');
-    renderTable(submissions);
-  }
 
-  document.getElementById('btn-back').addEventListener('click', showTable);
-  document.getElementById('btn-export').addEventListener('click', () => exportCSV(loadSubmissions()));
-  document.getElementById('btn-export-detailed').addEventListener('click', () => exportDetailedCSV(loadSubmissions()));
-  document.getElementById('btn-clear').addEventListener('click', () => {
+  // const submissions = loadSubmissions();
+
+  // const submissions = loadSubmissions();
+  // if (!submissions.length) {
+  //   document.getElementById('empty-state').classList.remove('hidden');
+  // } else {
+  //   document.getElementById('submission-count').textContent = submissions.length;
+  //   document.getElementById('section-table').classList.remove('hidden');
+  //   renderTable(submissions);
+  // }
+
+    let submissions = [];
+
+    try {
+        submissions = await loadSubmissions();
+    } catch (err) {
+        console.error(err);
+        alert('Failed to load submissions. Please log in again.');
+        showLoginScreen();
+        return;
+    }
+
+    if (!submissions.length) {
+        document.getElementById('empty-state').classList.remove('hidden');
+    } else {
+        document.getElementById('empty-state').classList.add('hidden');
+        document.getElementById('submission-count').textContent = submissions.length;
+        document.getElementById('section-table').classList.remove('hidden');
+        renderTable(submissions);
+    }
+
+    document.getElementById('btn-back').addEventListener('click', showTable);
+
+  // document.getElementById('btn-export').addEventListener('click', () => exportCSV(loadSubmissions()));
+  // document.getElementById('btn-export-detailed').addEventListener('click', () => exportDetailedCSV(loadSubmissions()));
+
+    document.getElementById('btn-export').addEventListener('click', async () => {
+        const submissions = await loadSubmissions();
+        exportCSV(submissions);
+    });
+
+    document.getElementById('btn-export-detailed').addEventListener('click', async () => {
+        const submissions = await loadSubmissions();
+        exportDetailedCSV(submissions);
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
     if (confirm('Delete all submissions and teacher notes? This cannot be undone.')) {
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(NOTES_KEY);
@@ -660,4 +824,4 @@ function init() {
   });
 }
 
-init();
+initApp();
