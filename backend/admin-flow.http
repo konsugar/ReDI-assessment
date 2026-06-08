@@ -1,0 +1,511 @@
+@ReDI.Assessment.Api_HostAddress = https://localhost:7101
+@AdminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW4iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImV4cCI6MTc4MDY5NjA2OSwiaXNzIjoiUmVESS5Bc3Nlc3NtZW50LkFwaSIsImF1ZCI6IlJlREkuQXNzZXNzbWVudC5BZG1pbiJ9.nq-oK-T8-i9qiScJFqrFPPyW0TmZS5msE4uJoF8CThM
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments/9001
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments/9002
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/content
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/content
+
+###
+###
+###
+###
+###
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002
+Content-Type: application/json
+
+{
+	"title": "Seed: Editable Draft Assessment Updated",
+	"description": "Updated draft assessment for admin content editor testing.",
+	"timeLimitMinutes": 45
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/content
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001
+Content-Type: application/json
+
+{
+	"title": "Seed: Frontend Demo Assessment",
+	"description": "Published assessment based on frontend default questions for student flow testing.",
+	"timeLimitMinutes": 45
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/questions
+Content-Type: application/json
+
+{
+	"text": "This question should not be created.",
+	"questionType": 1,
+	"sortOrder": 99
+}
+
+###
+###
+###
+###
+###
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/topics
+Content-Type: application/json
+
+{
+	"topicId": 9003,
+	"sortOrder": 2
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/content
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/questions
+Content-Type: application/json
+
+{
+	"text": "Which topic is mainly about programming for the web?",
+	"questionType": 1,
+	"sortOrder": 2
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/questions/9014/answer-options
+Content-Type: application/json
+
+{
+	"text": "JavaScript",
+	"isCorrect": true,
+	"sortOrder": 0
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/questions/9014/answer-options
+Content-Type: application/json
+
+{
+	"text": "CSS",
+	"isCorrect": false,
+	"sortOrder": 1
+}
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/questions/9014/answer-options
+Content-Type: application/json
+
+{
+	"text": "HTML",
+	"isCorrect": false,
+	"sortOrder": 2
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/content
+
+###
+###
+###
+###
+###
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/publication
+Content-Type: application/json
+
+{
+	"isPublished": true
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/content
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/questions
+Content-Type: application/json
+
+{
+	"text": "This should be blocked after publication.",
+	"questionType": 1,
+	"sortOrder": 99
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/publication
+Content-Type: application/json
+
+{
+	"isPublished": false
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9002/content
+
+###
+###
+###
+###
+###
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/submissions
+Content-Type: application/json
+
+{
+	"participantCode": "SMOKE-001",
+	"selfEvaluation": [
+		{
+			"topicId": 9001,
+			"topicName": "HTML",
+			"rating": 4
+		},
+		{
+			"topicId": 9002,
+			"topicName": "CSS",
+			"rating": 3
+		},
+		{
+			"topicId": 9003,
+			"topicName": "JavaScript",
+			"rating": 2
+		},
+		{
+			"topicId": 9004,
+			"topicName": "Responsive Design",
+			"rating": 3
+		},
+		{
+			"topicId": 9005,
+			"topicName": "Version Control",
+			"rating": 4
+		}
+	],
+	"multipleChoiceAnswers": [
+		{
+			"questionId": 9001,
+			"selectedOption": 0
+		},
+		{
+			"questionId": 9002,
+			"selectedOption": 2
+		},
+		{
+			"questionId": 9003,
+			"selectedOption": 1
+		},
+		{
+			"questionId": 9004,
+			"selectedOption": 1
+		},
+		{
+			"questionId": 9005,
+			"selectedOption": 2
+		},
+		{
+			"questionId": 9006,
+			"selectedOption": 1
+		},
+		{
+			"questionId": 9007,
+			"selectedOption": 2
+		},
+		{
+			"questionId": 9008,
+			"selectedOption": 2
+		}
+	],
+	"openAnswers": [
+		{
+			"questionId": 9009,
+			"questionText": "Describe the difference between margin and padding in CSS.",
+			"text": "Margin is outside the border. Padding is inside the border."
+		},
+		{
+			"questionId": 9010,
+			"questionText": "What is the purpose of the <head> element in HTML?",
+			"text": "It contains metadata, title, links to styles and scripts."
+		},
+		{
+			"questionId": 9011,
+			"questionText": "Explain what a function is in JavaScript and give a simple example.",
+			"text": "A function is a reusable block of code."
+		}
+	]
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/submissions/details
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/submissions/1/open-answers/9/evaluation
+Content-Type: application/json
+
+{
+	"isCorrect": true
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/submissions/1
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/submissions/1/open-answers/9/teacher-note
+Content-Type: application/json
+
+{
+	"teacherNote": "Good and concise answer."
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/submissions/{{submissionId}}
+
+###
+###
+###
+###
+###
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/submissions/details
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/submissions/1
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/submissions/1/open-answers/9/evaluation
+Content-Type: application/json
+
+{
+	"isCorrect": false
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/submissions/1/open-answers/9/teacher-note
+Content-Type: application/json
+
+{
+	"teacherNote": "Updated through compatibility endpoint."
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/submissions/{{submissionId}}
+
+###
+###
+###
+###
+###
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/publication
+Content-Type: application/json
+
+{
+	"isPublished": false
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/content
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/questions
+Content-Type: application/json
+
+{
+	"text": "This should be blocked because submissions exist.",
+	"questionType": 1,
+	"sortOrder": 99
+}
+
+###
+
+PUT {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/publication
+Content-Type: application/json
+
+{
+	"isPublished": true
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/content
+
+###
+###
+### auth
+###
+###
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/admin/auth/login
+Content-Type: application/json
+
+{
+	"username": "admin",
+	"password": "admin-dev-password"
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/questions
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/content
+
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/content
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments
+Authorization: Bearer {{AdminToken}}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments/9001
+Authorization: Bearer {{AdminToken}}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments/current
+Authorization: Bearer {{AdminToken}}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments/launchable
+
+###
+
+POST {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/submissions
+Content-Type: application/json
+
+{
+	"participantCode": "AUTH-SMOKE-001",
+	"selfEvaluation": [
+		{ "topicId": 9001, "topicName": "HTML", "rating": 4 },
+		{ "topicId": 9002, "topicName": "CSS", "rating": 3 },
+		{ "topicId": 9003, "topicName": "JavaScript", "rating": 3 },
+		{ "topicId": 9004, "topicName": "Responsive Design", "rating": 3 },
+		{ "topicId": 9005, "topicName": "Version Control", "rating": 4 }
+	],
+	"multipleChoiceAnswers": [
+		{ "questionId": 9001, "selectedOption": 0 },
+		{ "questionId": 9002, "selectedOption": 2 },
+		{ "questionId": 9003, "selectedOption": 1 },
+		{ "questionId": 9004, "selectedOption": 1 },
+		{ "questionId": 9005, "selectedOption": 2 },
+		{ "questionId": 9006, "selectedOption": 1 },
+		{ "questionId": 9007, "selectedOption": 2 },
+		{ "questionId": 9008, "selectedOption": 2 }
+	],
+	"openAnswers": [
+		{
+			"questionId": 9009,
+			"questionText": "Describe the difference between margin and padding in CSS.",
+			"text": "Margin is outside the border. Padding is inside."
+		},
+		{
+			"questionId": 9010,
+			"questionText": "What is the purpose of the <head> element in HTML?",
+			"text": "It contains metadata and links."
+		},
+		{
+			"questionId": 9011,
+			"questionText": "Explain what a function is in JavaScript and give a simple example.",
+			"text": "A reusable block of code."
+		}
+	]
+}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/submissions/details
+Authorization: Bearer {{AdminToken}}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/submissions/details
+Authorization: Bearer {{AdminToken}}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/questions
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/frontend-questions
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments/launchable
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/assessments/9001/content
+Authorization: Bearer {{AdminToken}}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/topics
+Authorization: Bearer {{AdminToken}}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/frontend-assessments
+Authorization: Bearer {{AdminToken}}
+
+###
+
+GET {{ReDI.Assessment.Api_HostAddress}}/api/submissions/details
+Authorization: Bearer {{AdminToken}}
