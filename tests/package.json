@@ -1,0 +1,6 @@
+{
+  "name": "redi-assessment-integration-tests",
+  "private": true,
+  "scripts": { "test": "node database-ui.cjs" },
+  "devDependencies": { "playwright": "1.62.1" }
+}

@@ -27,7 +27,7 @@ python -m http.server 8000 --directory .\frontend
 
 Open http://localhost:8000/evaluation.html or http://localhost:8000/admin.html. Both pages use `https://localhost:7101/api`; Swagger is at `https://localhost:7101/swagger`. Trust your local ASP.NET development certificate if your browser requires it.
 
-The frontend is already configured to use the API. See [frontend/README.md](frontend/README.md) for remaining integration limitations.
+The frontend stores application data through the API in SQL Server. Teachers can create or clone a draft, edit/import its question bank, publish it and share its student link. Notes and evaluations are saved with **Save review** and are available across sessions. See [frontend/README.md](frontend/README.md) for the workflow and [tests/README.md](tests/README.md) for real database/browser integration checks.
 
 ## Repository history
 

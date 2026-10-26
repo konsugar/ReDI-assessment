@@ -671,3 +671,8 @@ tbody td {
   .btn-edit, .btn-delete { flex: 1; }
   .tab-actions-spacer { display: none; }
 }
+#question-editor { border: 0; padding: 0; margin: 0; min-width: 0; }
+#question-editor:disabled { opacity: .65; }
+#admin-status, .review-status { display: block; margin: .5rem 0; }
+.teacher-note select, #assessment-select { padding: .5rem; max-width: 100%; }
+.btn-save-review { margin-top: .5rem; padding: .5rem 1rem; }

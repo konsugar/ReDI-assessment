@@ -21,7 +21,7 @@ The untracked `Swagger/AuthorizeCheckOperationFilter.cs` uses an unavailable Swa
 
 ## Validation scope
 
-Build, static frontend checks and database-backed API integration checks were performed. No existing application database content was changed. Browser interaction and frontend persistence beyond the API calls were not tested.
+Build, static frontend checks, database-backed API checks and subsequent browser integration tests were performed. No existing application database content was changed. The browser persistence implementation and its verification are recorded below.
 
 Release build passed with zero errors. NuGet reported existing vulnerability warnings for Microsoft.OpenApi 2.0.0 (GHSA-v5pm-xwqc-g5wc) and System.Security.Cryptography.Pkcs 9.0.4 (GHSA-2fmv-rv2c-59x7, GHSA-846f-f764-76mx). Dependency upgrades are deferred to a separate change. All three frontend JavaScript files passed Node syntax checks. SHA-256 comparison verified all 1003 backup files against the originals.
 
@@ -41,6 +41,16 @@ Verified through HTTP requests:
 - An authenticated open-answer evaluation and teacher note persisted and were returned by a subsequent detail request.
 - An invalid student submission was rejected with HTTP 400.
 
-The test server was stopped. The separate test database remains available locally for inspection and contains only seed data and synthetic test submissions. These checks validate the API and database flow, not browser UI behavior: the frontend still stores teacher notes and question-bank edits in localStorage as documented in its README.
+The test server was stopped. The separate test database remains available locally for inspection and contains only seed data and synthetic test submissions. This initial API verification was followed by the browser persistence implementation below.
 
 EF emitted existing multiple-collection query performance warnings. The local EF CLI is 10.0.2 while the runtime packages are 10.0.7; migrations completed successfully despite the version warning.
+
+## Database persistence in the frontend
+
+The teacher editor now loads and saves its topics and questions through an authenticated question-bank endpoint. Draft saves/imports are atomic and version checked. Existing published/submitted assessment locks remain enforced. Teachers can create or clone drafts, publish them, and share an assessment-specific student URL. Shared topics cannot be silently changed in another assessment.
+
+Teacher notes and open-answer evaluations use the existing database endpoints. Detailed exports use values fetched from the database. Student submissions are no longer copied into browser storage, and the local mock/fallback paths and misleading local-clear button have been removed. Only the transient login token uses sessionStorage. Existing browser-only data is not automatically deleted or imported.
+
+`tests/database-ui.cjs` passed in headless Edge with an isolated browser profile and the separate LocalDB test database. It verified real question edits, add/delete, JSON import, publication, student submission, teacher review and retrieval from a new independent browser session. It also verified rejected stale/invalid/unauthorized/locked writes and visible feedback for a simulated server failure without a false successful save. Both browser sessions had empty localStorage.
+
+No database schema migration or dependency update is required for this follow-up. Existing NuGet warnings remain as listed above.

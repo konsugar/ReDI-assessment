@@ -23,13 +23,13 @@ npx serve
 
 ## Current state
 
-The frontend uses the real API by default: `CONFIG.useMock = false` and `CONFIG.apiBase = 'https://localhost:7101/api'` in `evaluation.js` and `admin.js`. Start the backend with its `https` launch profile. The admin dashboard signs in through `/api/admin/auth/login` and fetches submissions from `/api/submissions/details` with a bearer token.
+The frontend stores questions, topics, submissions, teacher notes and evaluations through the API in SQL Server. There is no browser-storage or mock-data fallback. Both pages use `https://localhost:7101/api`; start the backend with its `https` launch profile. Only the temporary admin authentication token is kept in sessionStorage.
 
-For the optional local mock mode, set `CONFIG.useMock = true`. In that mode:
+Teachers select an assessment, create a draft or clone an existing assessment. Each editor Save, JSON import and Reset to Defaults persists the complete draft question bank atomically. A version check rejects stale edits from another session. Reload saved questions to resolve a conflict. Published assessments and assessments with attempts are locked against content changes; clone them to make a new version without changing historical answers.
 
-- Questions are loaded from `localStorage` (key `redi_questions`, written by the admin's Manage Questions tab) or fall back to `questions-default.js`.
-- Submissions are stored in `localStorage` (key `redi_submissions`) and read back by the admin dashboard.
-- Teacher notes are stored in `localStorage` (key `redi_teacher_notes`).
+Publish a ready draft and share its **Open student link**, which includes `?assessmentId=...`. The student page without this parameter continues to use the backend's configured current assessment. Teacher submissions and review operations are scoped to the selected assessment.
+
+Use **Save review** for an open answer's note and evaluation. Saved values are loaded from the database in every session and included in detailed CSV exports. Errors remain visible; the interface does not report success when a request fails. Old browser-only data is not silently imported or deleted; question sets can be imported explicitly as JSON.
 
 Keep the API base URL consistent in both JavaScript files. See [the backend contract](../backend/Docs/frontend-contract.md) for the integrated API details.
 
@@ -107,16 +107,15 @@ Accepts a participant's completed evaluation.
 }
 ```
 
-The shape mirrors the mock response in `postSubmission` in `evaluation.js`.
+The response is supplied by the backend after the submission is stored.
 
-## Open items for the backend
+## Persistence endpoints
 
-These are not implemented in the frontend yet, but worth discussing:
-
-- **Persisting teacher-edited questions** — currently the admin writes the question bank to `localStorage` only. A `PUT /api/questions` endpoint plus a small change in `admin.js` would let edits sync across machines.
-- **Fetching submissions in the dashboard** — implemented through authenticated `GET /api/submissions/details`; localStorage is used only in mock mode.
-- **Teacher notes persistence** — same pattern; currently localStorage-only.
-- **Auth** — the admin page uses backend credentials and bearer tokens. Development credentials must be replaced before deployment.
+- Authenticated `GET/PUT /api/assessments/{id}/question-bank` loads/saves a complete draft bank. PUT requires the version returned by GET. Validation and changes run in one transaction; failed imports leave the saved bank intact.
+- Authenticated `/api/assessments/{id}/submissions/details` loads work for the selected assessment; existing evaluation and teacher-note PUT endpoints save review changes.
+- Public `/api/assessments/{id}/frontend-questions` and submission POST serve the selected student's test.
+- Topic descriptions shared by other assessments cannot be silently changed; use a different topic name to create independent content.
+- Development credentials must be replaced before deployment. See [integration test instructions](../tests/README.md) for database and browser verification.
 
 ## File map
 
@@ -124,7 +123,7 @@ These are not implemented in the frontend yet, but worth discussing:
 | --- | --- |
 | `evaluation.html`, `evaluation.css`, `evaluation.js` | Student evaluation |
 | `admin.html`, `admin.css`, `admin.js` | Teacher dashboard |
-| `questions-default.js` | Built-in starter question set (shared by both pages) |
+| `questions-default.js` | Starter question set used by the teacher's explicit Reset to Defaults action |
 | `logo/` | Logo assets |
 
 ## Privacy notes

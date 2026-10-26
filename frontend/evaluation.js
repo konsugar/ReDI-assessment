@@ -1,20 +1,8 @@
 // ─── Configuration ────────────────────────────────────────────────────────────
-const CONFIG = {
-    apiBase: 'https://localhost:7101/api',
-    useMock: false
-};
-
-const QUESTIONS_KEY = 'redi_questions';
-
-function loadStoredQuestions() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(QUESTIONS_KEY) || 'null');
-    if (stored && Array.isArray(stored.topics) && Array.isArray(stored.questions) && Array.isArray(stored.openQuestions)) {
-      return stored;
-    }
-  } catch (_) {}
-  return null;
-}
+const CONFIG = { apiBase: window.REDI_API_BASE || 'https://localhost:7101/api' };
+const requestedAssessment = new URLSearchParams(location.search).get('assessmentId');
+if (requestedAssessment !== null && !/^[1-9][0-9]*$/.test(requestedAssessment)) throw new Error('Invalid assessment link');
+const assessmentPath = requestedAssessment ? `/assessments/${requestedAssessment}` : '';
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 function escapeHtml(str) {
@@ -37,42 +25,13 @@ const state = {
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 async function fetchQuestions() {
-  if (CONFIG.useMock) {
-    return loadStoredQuestions() || window.REDI_DEFAULT_QUESTIONS;
-  }
-
-  const res = await fetch(`${CONFIG.apiBase}/questions`);
+  const res = await fetch(`${CONFIG.apiBase}${assessmentPath ? `${assessmentPath}/frontend-questions` : "/questions"}`);
   if (!res.ok) throw new Error('Failed to load questions');
   return res.json();
 }
 
 async function postSubmission(payload) {
-  if (CONFIG.useMock) {
-    let correct = 0;
-    state.data.questions.forEach(q => {
-      if (state.mcq[q.id] === q.correctIndex) correct++;
-    });
-    const total = state.data.questions.length;
-    return {
-      submissionId: 'MOCK-' + Date.now(),
-      participantCode: payload.participantCode,
-      score: correct,
-      total,
-      percentage: total ? Math.round((correct / total) * 100) : 0,
-      questionResults: state.data.questions.map(q => ({
-        questionId: q.id,
-        questionText: q.text,
-        options: q.options,
-        selectedOption: payload.multipleChoiceAnswers.find(a => a.questionId === q.id)?.selectedOption ?? null,
-        correctIndex: q.correctIndex,
-        correct: state.mcq[q.id] === q.correctIndex
-      })),
-      selfEvaluation: payload.selfEvaluation,
-      openAnswers: payload.openAnswers
-    };
-  }
-
-  const res = await fetch(`${CONFIG.apiBase}/submissions`, {
+  const res = await fetch(`${CONFIG.apiBase}${assessmentPath}/submissions`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -216,14 +175,6 @@ function validateMCQ() {
   return true;
 }
 
-// ─── Local Storage ────────────────────────────────────────────────────────────
-function saveSubmissionLocally(results) {
-  const key = 'redi_submissions';
-  const existing = JSON.parse(localStorage.getItem(key) || '[]');
-  existing.push({ ...results, timestamp: new Date().toISOString() });
-  localStorage.setItem(key, JSON.stringify(existing));
-}
-
 // ─── Submit ───────────────────────────────────────────────────────────────────
 async function handleSubmit() {
   const btn = document.getElementById('btn-submit');
@@ -250,7 +201,6 @@ async function handleSubmit() {
 
   try {
     const results = await postSubmission(payload);
-    saveSubmissionLocally(results);
     renderResults(results);
     showSection('section-results');
   } catch (err) {

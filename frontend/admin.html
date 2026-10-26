@@ -48,14 +48,21 @@
 
       <div id="admin-app" class="hidden">
 
+          <div class="tab-actions">
+              <label>Assessment <select id="assessment-select"></select></label>
+              <button id="btn-new-assessment" class="btn-secondary">New draft</button>
+              <button id="btn-clone" class="btn-secondary">Clone as draft</button>
+              <a id="student-link" class="btn-secondary hidden" target="_blank" rel="noopener">Open student link</a>
+          </div>
+          <p id="admin-status" role="status" aria-live="polite"></p>
+
           <!-- ─── TAB: Submissions ─────────────────────────────────────────────── -->
           <div id="tab-submissions" class="admin-tab-panel">
 
               <div class="tab-actions">
                   <button id="btn-export" class="btn-secondary">Export Summary</button>
                   <button id="btn-export-detailed" class="btn-secondary">Export Detailed</button>
-                  <!--<button id="btn-clear" class="btn-danger">Clear All Submissions</button>-->
-                  <button id="btn-clear" class="btn-danger">Clear Local Submissions (not Database)</button>
+                  <button id="btn-refresh" class="btn-secondary">Refresh submissions</button>
               </div>
 
               <div id="empty-state" class="empty-state hidden">
@@ -92,18 +99,25 @@
           <div id="tab-questions" class="admin-tab-panel hidden">
 
               <div class="tab-actions">
+                  <button id="btn-publication" class="btn-secondary">Publish</button>
+                  <button id="btn-reload-bank" class="btn-secondary">Reload saved questions</button>
+                  <button id="btn-export-questions" class="btn-secondary">Export JSON</button>
+              </div>
+              <p id="bank-status" role="status"></p>
+              <fieldset id="question-editor" disabled>
+
+              <div class="tab-actions">
                   <button id="btn-add-topic" class="btn-secondary">+ Add Topic</button>
                   <button id="btn-add-mcq" class="btn-secondary">+ Add Multiple Choice Question</button>
                   <button id="btn-add-open" class="btn-secondary">+ Add Open Question</button>
                   <span class="tab-actions-spacer"></span>
                   <button id="btn-import" class="btn-secondary">Import JSON</button>
-                  <button id="btn-export-questions" class="btn-secondary">Export JSON</button>
                   <button id="btn-reset-questions" class="btn-danger">Reset to Defaults</button>
                   <input type="file" id="import-file" accept="application/json,.json" class="hidden">
               </div>
 
               <p class="manage-hint">
-                  Changes save automatically to this browser. Use <strong>Export JSON</strong> to back up your question set or copy it to another computer.
+                  Save each edit to share it with other teachers. Import and reset also save the complete question set. Publish the draft when it is ready for students.
               </p>
 
               <section class="manage-section">
@@ -120,6 +134,8 @@
                   <h2 class="section-title">Open Questions</h2>
                   <div id="open-list" class="editor-list"></div>
               </section>
+
+              </fieldset>
 
           </div>
 

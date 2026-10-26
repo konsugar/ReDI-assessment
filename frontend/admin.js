@@ -1,6 +1,5 @@
 const CONFIG = {
-    apiBase: 'https://localhost:7101/api',
-    useBackend: true,
+    apiBase: window.REDI_API_BASE || 'https://localhost:7101/api',
     authTokenKey: 'redi_admin_token'
 };
 
@@ -66,26 +65,6 @@ async function loginAdmin(username, password) {
     setAdminToken(data.accessToken);
 }
 
-// function initLogin() {
-//     const form = document.getElementById('admin-login-form');
-//     const error = document.getElementById('admin-login-error');
-
-//     form.addEventListener('submit', async e => {
-//         e.preventDefault();
-
-//         const username = document.getElementById('admin-username').value.trim();
-//         const password = document.getElementById('admin-password').value;
-
-//         try {
-//             await loginAdmin(username, password);
-//             showAdminApp();
-//             await initAdminData();
-//         } catch (err) {
-//             error.textContent = 'Login failed. Please check your credentials.';
-//             error.classList.remove('hidden');
-//         }
-//     });
-// }
 
 function initLogin() {
     const form = document.getElementById('admin-login-form');
@@ -99,8 +78,9 @@ function initLogin() {
 
         try {
             await loginAdmin(username, password);
+            error.classList.add('hidden');
             showAdminApp();
-            await initAdminData();
+            await initAdminData().catch(reportError);
         } catch (err) {
             error.textContent = 'Login failed. Please check your credentials.';
             error.classList.remove('hidden');
@@ -149,9 +129,12 @@ async function initApp() {
 // main admin logic
 //
 
-const STORAGE_KEY = 'redi_submissions';
-const NOTES_KEY = 'redi_teacher_notes';
-const QUESTIONS_KEY = 'redi_questions';
+let selectedAssessmentId = null;
+let bankVersion = null;
+let bankMetadata = null;
+let bankBusy = false;
+let savedQuestions = null;
+let selectionRevision = 0;
 
 function escapeHtml(str) {
   return String(str)
@@ -162,42 +145,35 @@ function escapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
-// function loadSubmissions() {
-//   return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-// }
+async function api(path, options = {}) {
+  const res = await authFetch(`${CONFIG.apiBase}${path}`, {
+    ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    let message = text;
+    try { const data = JSON.parse(text); message = data.message || data.title || text; } catch (_) {}
+    throw new Error(message || `Request failed (${res.status})`);
+  }
+  return res.status === 204 ? null : res.json();
+}
 
 async function loadSubmissions() {
-    if (!CONFIG.useBackend) {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    }
-
-    const res = await authFetch(`${CONFIG.apiBase}/submissions/details`);
-
-    if (!res.ok) {
-        throw new Error('Failed to load submissions');
-    }
-
-    return await res.json();
+  return api(`/assessments/${selectedAssessmentId}/submissions/details`);
 }
 
-function loadNotes() {
-  return JSON.parse(localStorage.getItem(NOTES_KEY) || '{}');
+function reportError(err) {
+  document.getElementById('admin-status').textContent = err.message;
 }
 
-function saveNote(submissionTimestamp, questionId, text) {
-  const notes = loadNotes();
-  const key = `${submissionTimestamp}::${questionId}`;
-  if (text) {
-    notes[key] = text;
-  } else {
-    delete notes[key];
-  }
-  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-}
-
-function getNote(submissionTimestamp, questionId) {
-  const notes = loadNotes();
-  return notes[`${submissionTimestamp}::${questionId}`] || '';
+async function refreshSubmissions() {
+  const assessmentId = selectedAssessmentId;
+  const submissions = await loadSubmissions();
+  if (assessmentId !== selectedAssessmentId) return submissions;
+  renderTable(submissions);
+  document.getElementById('submission-count').textContent = submissions.length;
+  document.getElementById('empty-state').classList.toggle('hidden', submissions.length > 0);
+  return submissions;
 }
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
@@ -279,7 +255,7 @@ function renderDetail(s) {
   }).join('');
 
   const openHtml = (s.openAnswers || []).map((oa, i) => {
-    const savedNote = getNote(s.timestamp, oa.questionId);
+    const savedNote = oa.teacherNote || '';
     const prompt = oa.questionText || `Question ${oa.questionId}`;
     const answer = oa.text
       ? escapeHtml(oa.text)
@@ -293,9 +269,17 @@ function renderDetail(s) {
           <textarea
             placeholder="Add evaluation notes here…"
             rows="2"
-            data-submission-ts="${escapeHtml(s.timestamp)}"
-            data-question-id="${escapeHtml(String(oa.questionId))}"
+            maxlength="2000" data-answer-id="${oa.attemptQuestionId}"
           >${escapeHtml(savedNote)}</textarea>
+          <label>Evaluation
+            <select class="answer-evaluation">
+              <option value="" ${oa.isCorrect == null ? 'selected' : ''}>Not reviewed</option>
+              <option value="true" ${oa.isCorrect === true ? 'selected' : ''}>Correct</option>
+              <option value="false" ${oa.isCorrect === false ? 'selected' : ''}>Incorrect</option>
+            </select>
+          </label>
+          <button class="btn-save-review" type="button">Save review</button>
+          <span class="review-status" role="status"></span>
         </div>
       </div>
     `;
@@ -329,9 +313,26 @@ function renderDetail(s) {
     </div>
   `;
 
-  container.querySelectorAll('.teacher-note textarea').forEach(ta => {
-    ta.addEventListener('input', () => {
-      saveNote(ta.dataset.submissionTs, parseInt(ta.dataset.questionId), ta.value);
+  container.querySelectorAll('.teacher-note').forEach(card => {
+    const textarea = card.querySelector('textarea');
+    const select = card.querySelector('select');
+    const button = card.querySelector('button');
+    const status = card.querySelector('.review-status');
+    const dirty = () => { status.textContent = 'Unsaved changes'; };
+    textarea.addEventListener('input', dirty);
+    select.addEventListener('change', dirty);
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      textarea.disabled = select.disabled = true;
+      status.textContent = 'Saving…';
+      const path = `/assessments/${selectedAssessmentId}/submissions/${s.attemptId}/open-answers/${textarea.dataset.answerId}`;
+      try {
+        await api(`${path}/teacher-note`, { method: 'PUT', body: JSON.stringify({ teacherNote: textarea.value }) });
+        await api(`${path}/evaluation`, { method: 'PUT', body: JSON.stringify({ isCorrect: select.value === '' ? null : select.value === 'true' }) });
+        status.textContent = 'Saved to database';
+        await refreshSubmissions();
+      } catch (err) { status.textContent = `Save incomplete: ${err.message}. Retry to save both fields.`; }
+      finally { button.disabled = textarea.disabled = select.disabled = false; }
     });
   });
 }
@@ -368,7 +369,7 @@ function exportDetailedCSV(submissions) {
       rows.push([s.participantCode, s.timestamp, 'Multiple Choice', r.questionText, selected, r.correct ? 'yes' : 'no', '']);
     });
     (s.openAnswers || []).forEach(oa => {
-      rows.push([s.participantCode, s.timestamp, 'Open Answer', oa.questionText || `Question ${oa.questionId}`, oa.text || '', '', getNote(s.timestamp, oa.questionId)]);
+      rows.push([s.participantCode, s.timestamp, 'Open Answer', oa.questionText || `Question ${oa.questionId}`, oa.text || '', oa.isCorrect == null ? '' : (oa.isCorrect ? 'yes' : 'no'), oa.teacherNote || '']);
     });
   });
   downloadCsv(rows, `redi_results_detailed_${new Date().toISOString().slice(0,10)}.csv`);
@@ -390,18 +391,50 @@ function triggerDownload(blob, filename) {
 }
 
 // ─── Question bank ───────────────────────────────────────────────────────────
-function loadQuestions() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(QUESTIONS_KEY) || 'null');
-    if (stored && Array.isArray(stored.topics) && Array.isArray(stored.questions) && Array.isArray(stored.openQuestions)) {
-      return stored;
-    }
-  } catch (_) {}
-  return cloneDefaults();
+async function loadQuestions() {
+  const assessmentId = selectedAssessmentId;
+  const result = await api(`/assessments/${assessmentId}/question-bank`);
+  if (assessmentId !== selectedAssessmentId) return;
+  acceptBank(result);
 }
 
-function saveQuestions(data) {
-  localStorage.setItem(QUESTIONS_KEY, JSON.stringify(data));
+function acceptBank(result) {
+  bankVersion = result.version;
+  bankMetadata = result.bank;
+  questions = { topics: result.bank.topics, questions: result.bank.questions, openQuestions: result.bank.openQuestions };
+  savedQuestions = structuredClone(questions);
+  editing.topic = editing.mcq = editing.open = null;
+  updateBankStatus();
+}
+
+function updateBankStatus() {
+  for (const id of ['assessment-select', 'btn-new-assessment', 'btn-clone', 'btn-publication', 'btn-reload-bank', 'btn-export-questions']) document.getElementById(id).disabled = bankBusy;
+  const locked = bankMetadata.isPublished || bankMetadata.attemptCount > 0 || bankMetadata.hasUnsupportedQuestions;
+  document.getElementById('question-editor').disabled = locked || bankBusy;
+  document.getElementById('bank-status').textContent = bankMetadata.hasUnsupportedQuestions
+    ? 'This test contains question types this editor does not support. Its content is preserved.'
+    : bankMetadata.attemptCount > 0 ? 'Answers have already been submitted. Clone this test to edit a new draft.'
+    : bankMetadata.isPublished ? 'Published. Unpublish before editing.' : 'Draft. Save changes, then publish to accept answers.';
+  document.getElementById('btn-publication').textContent = bankMetadata.isPublished ? 'Unpublish' : 'Publish';
+  document.getElementById('student-link').href = `evaluation.html?assessmentId=${selectedAssessmentId}`;
+  document.getElementById('student-link').classList.toggle('hidden', !bankMetadata.isPublished);
+}
+
+async function saveQuestions(data) {
+  if (bankBusy) return false;
+  bankBusy = true;
+  updateBankStatus();
+  document.getElementById('admin-status').textContent = 'Saving question bank…';
+  try {
+    const result = await api(`/assessments/${selectedAssessmentId}/question-bank`, {
+      method: 'PUT', body: JSON.stringify({ ...data, version: bankVersion })
+    });
+    acceptBank(result);
+    renderQuestionEditor();
+    document.getElementById('admin-status').textContent = 'Question bank saved to database.';
+    return true;
+  } catch (err) { reportError(err); return false; }
+  finally { bankBusy = false; updateBankStatus(); }
 }
 
 function cloneDefaults() {
@@ -413,7 +446,7 @@ function nextId(items, fallback) {
   return Math.max(...items.map(i => Number(i.id) || 0)) + 1;
 }
 
-let questions = loadQuestions();
+let questions = { topics: [], questions: [], openQuestions: [] };
 const editing = { topic: null, mcq: null, open: null };
 
 function renderQuestionEditor() {
@@ -468,30 +501,28 @@ function topicForm(t) {
 function bindTopicEvents() {
   const list = document.getElementById('topics-list');
   list.querySelectorAll('.btn-edit').forEach(b => {
-    b.addEventListener('click', () => { editing.topic = Number(b.dataset.id); renderTopicsList(); });
+    b.addEventListener('click', async () => { if (Object.values(editing).some(id => id !== null)) return; editing.topic = Number(b.dataset.id); renderTopicsList(); });
   });
   list.querySelectorAll('.btn-delete').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
+      if (Object.values(editing).some(id => id !== null)) { alert('Save or cancel the current edit first.'); return; }
       if (confirm('Delete this topic?')) {
-        questions.topics = questions.topics.filter(t => t.id !== Number(b.dataset.id));
-        saveQuestions(questions);
+        const candidate = structuredClone(questions);
+        candidate.topics = candidate.topics.filter(t => t.id !== Number(b.dataset.id));
+        if (!await saveQuestions(candidate)) return;
         renderTopicsList();
       }
     });
   });
   list.querySelectorAll('.btn-cancel').forEach(b => {
     b.addEventListener('click', () => {
-      const id = Number(b.dataset.id);
-      const t = questions.topics.find(x => x.id === id);
-      if (t && !t.name && !t.description) {
-        questions.topics = questions.topics.filter(x => x.id !== id);
-      }
-      editing.topic = null;
-      renderTopicsList();
+      questions = structuredClone(savedQuestions);
+      editing.topic = editing.mcq = editing.open = null;
+      renderQuestionEditor();
     });
   });
   list.querySelectorAll('.btn-save').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
       const id = Number(b.dataset.id);
       const card = b.closest('.editor-card');
       const name = card.querySelector('.topic-name-input').value.trim();
@@ -500,7 +531,7 @@ function bindTopicEvents() {
       const t = questions.topics.find(x => x.id === id);
       t.name = name;
       t.description = desc;
-      saveQuestions(questions);
+      if (!await saveQuestions(questions)) return;
       editing.topic = null;
       renderTopicsList();
     });
@@ -574,30 +605,28 @@ function readMcqForm(card, id) {
 function bindMcqEvents() {
   const list = document.getElementById('mcq-list');
   list.querySelectorAll('.btn-edit').forEach(b => {
-    b.addEventListener('click', () => { editing.mcq = Number(b.dataset.id); renderMcqList(); });
+    b.addEventListener('click', async () => { if (Object.values(editing).some(id => id !== null)) return; editing.mcq = Number(b.dataset.id); renderMcqList(); });
   });
   list.querySelectorAll('.btn-delete').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
+      if (Object.values(editing).some(id => id !== null)) { alert('Save or cancel the current edit first.'); return; }
       if (confirm('Delete this question?')) {
-        questions.questions = questions.questions.filter(q => q.id !== Number(b.dataset.id));
-        saveQuestions(questions);
+        const candidate = structuredClone(questions);
+        candidate.questions = candidate.questions.filter(q => q.id !== Number(b.dataset.id));
+        if (!await saveQuestions(candidate)) return;
         renderMcqList();
       }
     });
   });
   list.querySelectorAll('.btn-cancel').forEach(b => {
     b.addEventListener('click', () => {
-      const id = Number(b.dataset.id);
-      const q = questions.questions.find(x => x.id === id);
-      if (q && !q.text && q.options.every(o => !o)) {
-        questions.questions = questions.questions.filter(x => x.id !== id);
-      }
-      editing.mcq = null;
-      renderMcqList();
+      questions = structuredClone(savedQuestions);
+      editing.topic = editing.mcq = editing.open = null;
+      renderQuestionEditor();
     });
   });
   list.querySelectorAll('.btn-save').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
       const id = Number(b.dataset.id);
       const card = b.closest('.editor-card');
       const { text, options, correctIndex } = readMcqForm(card, id);
@@ -611,13 +640,13 @@ function bindMcqEvents() {
       q.text = text;
       q.options = trimmedOptions;
       q.correctIndex = newCorrectIndex;
-      saveQuestions(questions);
+      if (!await saveQuestions(questions)) return;
       editing.mcq = null;
       renderMcqList();
     });
   });
   list.querySelectorAll('.btn-add-option').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
       const id = Number(b.dataset.id);
       const card = b.closest('.editor-card');
       const q = questions.questions.find(x => x.id === id);
@@ -629,7 +658,7 @@ function bindMcqEvents() {
     });
   });
   list.querySelectorAll('.btn-remove-option').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
       const idx = Number(b.dataset.index);
       const card = b.closest('.editor-card');
       const id = Number(card.querySelector('.btn-save').dataset.id);
@@ -686,37 +715,35 @@ function openForm(q) {
 function bindOpenEvents() {
   const list = document.getElementById('open-list');
   list.querySelectorAll('.btn-edit').forEach(b => {
-    b.addEventListener('click', () => { editing.open = Number(b.dataset.id); renderOpenList(); });
+    b.addEventListener('click', async () => { if (Object.values(editing).some(id => id !== null)) return; editing.open = Number(b.dataset.id); renderOpenList(); });
   });
   list.querySelectorAll('.btn-delete').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
+      if (Object.values(editing).some(id => id !== null)) { alert('Save or cancel the current edit first.'); return; }
       if (confirm('Delete this open question?')) {
-        questions.openQuestions = questions.openQuestions.filter(q => q.id !== Number(b.dataset.id));
-        saveQuestions(questions);
+        const candidate = structuredClone(questions);
+        candidate.openQuestions = candidate.openQuestions.filter(q => q.id !== Number(b.dataset.id));
+        if (!await saveQuestions(candidate)) return;
         renderOpenList();
       }
     });
   });
   list.querySelectorAll('.btn-cancel').forEach(b => {
     b.addEventListener('click', () => {
-      const id = Number(b.dataset.id);
-      const q = questions.openQuestions.find(x => x.id === id);
-      if (q && !q.text) {
-        questions.openQuestions = questions.openQuestions.filter(x => x.id !== id);
-      }
-      editing.open = null;
-      renderOpenList();
+      questions = structuredClone(savedQuestions);
+      editing.topic = editing.mcq = editing.open = null;
+      renderQuestionEditor();
     });
   });
   list.querySelectorAll('.btn-save').forEach(b => {
-    b.addEventListener('click', () => {
+    b.addEventListener('click', async () => {
       const id = Number(b.dataset.id);
       const card = b.closest('.editor-card');
       const text = card.querySelector('.open-text-input').value.trim();
       if (!text) { alert('Question text is required.'); return; }
       const q = questions.openQuestions.find(x => x.id === id);
       q.text = text;
-      saveQuestions(questions);
+      if (!await saveQuestions(questions)) return;
       editing.open = null;
       renderOpenList();
     });
@@ -725,6 +752,7 @@ function bindOpenEvents() {
 
 // ─── Add buttons ─────────────────────────────────────────────────────────────
 function addTopic() {
+  if (Object.values(editing).some(id => id !== null)) { alert('Save or cancel the current edit first.'); return; }
   const id = nextId(questions.topics, 1);
   questions.topics.push({ id, name: '', description: '' });
   editing.topic = id;
@@ -732,6 +760,7 @@ function addTopic() {
 }
 
 function addMcq() {
+  if (Object.values(editing).some(id => id !== null)) { alert('Save or cancel the current edit first.'); return; }
   const id = nextId(questions.questions, 1);
   questions.questions.push({ id, text: '', options: ['', '', '', ''], correctIndex: 0 });
   editing.mcq = id;
@@ -739,6 +768,7 @@ function addMcq() {
 }
 
 function addOpen() {
+  if (Object.values(editing).some(id => id !== null)) { alert('Save or cancel the current edit first.'); return; }
   const id = nextId(questions.openQuestions, 101);
   questions.openQuestions.push({ id, text: '' });
   editing.open = id;
@@ -746,22 +776,16 @@ function addOpen() {
 }
 
 // ─── Import / Export / Reset ─────────────────────────────────────────────────
-function exportQuestions() {
-  const blob = new Blob([JSON.stringify(questions, null, 2)], { type: 'application/json' });
-  triggerDownload(blob, `redi_questions_${new Date().toISOString().slice(0,10)}.json`);
-}
-
 function importQuestions(file) {
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try {
       const data = JSON.parse(reader.result);
       if (!Array.isArray(data.topics) || !Array.isArray(data.questions) || !Array.isArray(data.openQuestions)) {
         throw new Error('Invalid file: must contain topics, questions, and openQuestions arrays.');
       }
       if (!confirm('Replace the current question set with the imported one? This cannot be undone.')) return;
-      questions = data;
-      saveQuestions(questions);
+      if (!await saveQuestions(data)) return;
       editing.topic = editing.mcq = editing.open = null;
       renderQuestionEditor();
       alert('Question set imported successfully.');
@@ -772,92 +796,90 @@ function importQuestions(file) {
   reader.readAsText(file);
 }
 
-function resetQuestions() {
+async function resetQuestions() {
   if (!confirm('Reset all questions to the built-in defaults? Your current edits will be lost.')) return;
-  questions = cloneDefaults();
-  saveQuestions(questions);
+  if (!await saveQuestions(cloneDefaults())) return;
   editing.topic = editing.mcq = editing.open = null;
   renderQuestionEditor();
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-async function initAdminData() {
-  // Tabs
-  document.querySelectorAll('.admin-tab').forEach(t => {
-    t.addEventListener('click', () => activateTab(t.dataset.tab));
-  });
-
-  // Submissions
-
-  // const submissions = loadSubmissions();
-
-  // const submissions = loadSubmissions();
-  // if (!submissions.length) {
-  //   document.getElementById('empty-state').classList.remove('hidden');
-  // } else {
-  //   document.getElementById('submission-count').textContent = submissions.length;
-  //   document.getElementById('section-table').classList.remove('hidden');
-  //   renderTable(submissions);
-  // }
-
-    let submissions = [];
-
-    try {
-        submissions = await loadSubmissions();
-    } catch (err) {
-        console.error(err);
-        alert('Failed to load submissions. Please log in again.');
-        showLoginScreen();
-        return;
-    }
-
-    if (!submissions.length) {
-        document.getElementById('empty-state').classList.remove('hidden');
-    } else {
-        document.getElementById('empty-state').classList.add('hidden');
-        document.getElementById('submission-count').textContent = submissions.length;
-        document.getElementById('section-table').classList.remove('hidden');
-        renderTable(submissions);
-    }
-
-    document.getElementById('btn-back').addEventListener('click', showTable);
-
-  // document.getElementById('btn-export').addEventListener('click', () => exportCSV(loadSubmissions()));
-  // document.getElementById('btn-export-detailed').addEventListener('click', () => exportDetailedCSV(loadSubmissions()));
-
-    document.getElementById('btn-export').addEventListener('click', async () => {
-        const submissions = await loadSubmissions();
-        exportCSV(submissions);
-    });
-
-    document.getElementById('btn-export-detailed').addEventListener('click', async () => {
-        const submissions = await loadSubmissions();
-        exportDetailedCSV(submissions);
-    });
-
-    document.getElementById('btn-clear').addEventListener('click', () => {
-    if (confirm('Delete all submissions and teacher notes? This cannot be undone.')) {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(NOTES_KEY);
-      location.reload();
-    }
-  });
-
-  // Question manager
-  renderQuestionEditor();
-  document.getElementById('btn-add-topic').addEventListener('click', addTopic);
-  document.getElementById('btn-add-mcq').addEventListener('click', addMcq);
-  document.getElementById('btn-add-open').addEventListener('click', addOpen);
-  document.getElementById('btn-export-questions').addEventListener('click', exportQuestions);
-  document.getElementById('btn-reset-questions').addEventListener('click', resetQuestions);
-
-  const importInput = document.getElementById('import-file');
-  document.getElementById('btn-import').addEventListener('click', () => importInput.click());
-  importInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (file) importQuestions(file);
-    importInput.value = '';
-  });
+async function selectAssessment(id) {
+  const revision = ++selectionRevision;
+  selectedAssessmentId = Number(id);
+  document.getElementById('assessment-select').value = String(id);
+  document.getElementById('admin-status').textContent = '';
+  document.getElementById('question-editor').disabled = true;
+  document.getElementById('assessment-select').disabled = true;
+  try {
+    const [result, submissions] = await Promise.all([
+      api(`/assessments/${Number(id)}/question-bank`),
+      api(`/assessments/${Number(id)}/submissions/details`)
+    ]);
+    if (revision !== selectionRevision) return;
+    acceptBank(result);
+    renderQuestionEditor();
+    renderTable(submissions);
+    document.getElementById('submission-count').textContent = submissions.length;
+    document.getElementById('empty-state').classList.toggle('hidden', submissions.length > 0);
+    showTable();
+  } finally {
+    if (revision === selectionRevision) document.getElementById('assessment-select').disabled = false;
+  }
 }
 
-initApp();
+async function refreshAssessments(preferredId) {
+  const items = await api('/assessments');
+  const select = document.getElementById('assessment-select');
+  select.innerHTML = items.map(a => `<option value="${a.id}">${escapeHtml(a.title)}</option>`).join('');
+  if (!items.length) throw new Error('No assessments exist. Create a draft to get started.');
+  await selectAssessment(items.some(a => a.id === Number(preferredId)) ? Number(preferredId) : items[0].id);
+}
+
+const safely = fn => async (...args) => { try { await fn(...args); } catch (err) { reportError(err); } };
+
+async function initAdminData() {
+  document.querySelectorAll('.admin-tab').forEach(t => { t.onclick = () => activateTab(t.dataset.tab); });
+  document.getElementById('btn-back').onclick = showTable;
+  document.getElementById('btn-refresh').onclick = safely(async () => { await refreshSubmissions(); showTable(); });
+  document.getElementById('btn-export').onclick = safely(async () => exportCSV(await loadSubmissions()));
+  document.getElementById('btn-export-detailed').onclick = safely(async () => exportDetailedCSV(await loadSubmissions()));
+  document.getElementById('assessment-select').onchange = safely(e => selectAssessment(e.target.value));
+  document.getElementById('btn-new-assessment').onclick = safely(async () => {
+    const title = prompt('Title for the new assessment:');
+    if (!title?.trim()) return;
+    const created = await api('/assessments', { method: 'POST', body: JSON.stringify({ title: title.trim() }) });
+    await refreshAssessments(created.id);
+    activateTab('questions');
+  });
+  document.getElementById('btn-clone').onclick = safely(async () => {
+    const created = await api(`/assessments/${selectedAssessmentId}/clone`, { method: 'POST' });
+    await refreshAssessments(created.id);
+    activateTab('questions');
+  });
+  document.getElementById('btn-publication').onclick = safely(async () => {
+    if (Object.values(editing).some(id => id !== null)) throw new Error('Save or cancel the current edit first.');
+    await api(`/assessments/${selectedAssessmentId}/publication`, { method: 'PUT', body: JSON.stringify({ isPublished: !bankMetadata.isPublished }) });
+    await loadQuestions();
+    renderQuestionEditor();
+  });
+  document.getElementById('btn-reload-bank').onclick = safely(async () => {
+    if (!confirm('Reload the saved question bank? Unsaved edits will be discarded.')) return;
+    await loadQuestions(); renderQuestionEditor();
+  });
+  document.getElementById('btn-add-topic').onclick = addTopic;
+  document.getElementById('btn-add-mcq').onclick = addMcq;
+  document.getElementById('btn-add-open').onclick = addOpen;
+  document.getElementById('btn-export-questions').onclick = safely(async () => {
+    const saved = await api(`/assessments/${selectedAssessmentId}/question-bank`);
+    const { topics, questions, openQuestions } = saved.bank;
+    triggerDownload(new Blob([JSON.stringify({ topics, questions, openQuestions }, null, 2)], { type: 'application/json' }), 'redi_questions.json');
+  });
+  document.getElementById('btn-reset-questions').onclick = safely(resetQuestions);
+  const importInput = document.getElementById('import-file');
+  document.getElementById('btn-import').onclick = () => importInput.click();
+  importInput.onchange = e => { const file = e.target.files[0]; if (file) importQuestions(file); importInput.value = ''; };
+  await refreshAssessments(selectedAssessmentId);
+}
+
+initApp().catch(reportError);
