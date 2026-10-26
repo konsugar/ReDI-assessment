@@ -89,9 +89,20 @@ Then open:
 
 Both pages are configured to call `https://localhost:7101/api`. They will not function correctly without the backend. Open the backend Swagger URL once and accept/trust the development certificate if prompted.
 
-### 6. Try the application
+### 6. Test the prototype
 
-In the teacher dashboard, log in with the **development-only** credentials currently defined in `backend/appsettings.Development.json` (the sample username is `admin`; see that file for its password). Create or clone an assessment, edit its questions, and publish it when the dashboard marks it as ready. Use its **Open student link** to open the relevant assessment in the student page (`evaluation.html?assessmentId=...`). Submit answers as a student, then return to the teacher dashboard to view the submission and save a review.
+**Teacher / admin login (local development only)**
+
+- Username: `admin`
+- Password: `admin-dev-password`
+
+These are intentionally published **test credentials** from `backend/appsettings.Development.json`. Never use them, or the development JWT signing secret, for a publicly accessible deployment.
+
+Open [http://localhost:8000/admin.html](http://localhost:8000/admin.html), sign in, create or clone an assessment, edit its questions, and publish it when ready. Click **Open student link** to open that assessment (`evaluation.html?assessmentId=...`).
+
+**Student flow — no account or password**
+
+Open the student link and enter **any participant code you choose**, for example `TEST-001`. The code is an identifier attached to the submission, **not a login, password, or proof of identity**. No student account or registration is required. Use distinct codes when you want to distinguish test submissions. Complete the self-evaluation and questions, then submit; return to the teacher dashboard to review the saved submission.
 
 The plain `evaluation.html` URL uses the configured `FrontendAssessment:AssessmentId` instead of a selected assessment. On a fresh database, this default ID may not exist: **the teacher-generated student link is the recommended route**.
 
