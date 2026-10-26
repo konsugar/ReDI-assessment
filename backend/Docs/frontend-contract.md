@@ -112,7 +112,7 @@ Important:
 
 - `questions[]` contains `SingleChoice` questions only.
 - `openQuestions[]` contains `TextInput` questions.
-- Correct answers are not returned to the frontend.
+- Question retrieval does not return correct answers. Submission responses do include them (see below).
 - Backend does the scoring.
 
 ### 1.2 Selected assessment flow
@@ -199,6 +199,8 @@ Rules:
 
 - `participantCode` is required.
 - `selectedOption` is a zero-based option index.
+- Despite the `multipleChoiceAnswers` name, each answer selects exactly one option for a `SingleChoice` question; it does not implement the `MultipleChoice` enum type.
+- Include every supported question and linked topic exactly once; unknown or duplicate IDs are rejected. Ratings are integers from 1 to 5. Open-answer text may be empty and is limited to 4000 characters.
 - `topicName` is ignored by backend.
 - `questionText` is ignored by backend.
 - If the assessment has no topics, send `selfEvaluation: []`.
@@ -216,7 +218,7 @@ Response body:
 
 ```json
 {
-	"submissionId": 123,
+	"submissionId": "123",
 	"participantCode": "ReDI-001",
 	"score": 5,
 	"total": 8,
@@ -227,6 +229,8 @@ Response body:
 }
 ```
 
+The arrays above are abbreviated placeholders; actual responses include the saved question results, self-evaluation and open answers. `questionResults` includes `correctIndex` and `correct`, and the response includes scores. The student page displays only a confirmation, but these values are accessible in its HTTP response. Subsequent submission reads and teacher review updates require admin authentication.
+
 ## 2. Admin content management contract
 
 All endpoints in this section require an admin JWT token unless explicitly stated otherwise.
@@ -235,7 +239,7 @@ Use this contract for the admin screen that creates and edits assessments, topic
 
 ### 2.1 Main aggregate endpoint
 
-Use this as the primary data source for the assessment content editor screen:
+This aggregate endpoint exposes the full content model for API clients:
 
 ```http
 GET /api/assessments/{assessmentId}/content
@@ -631,7 +635,7 @@ DELETE /api/questions/{questionId}/answer-options/{answerOptionId}
 
 ### 2.11 Question types
 
-Use this aggregate response field to populate the editor dropdown:
+API clients can use this aggregate response field to discover domain types; the integrated editor uses the question-bank endpoint below instead of a type dropdown:
 
 ```text
 questionTypes[]
@@ -651,6 +655,29 @@ For current student frontend, only question types with this field should be used
 ```text
 isSupportedForFrontend = true
 ```
+
+### 2.12 Integrated question-bank editor
+
+The current teacher page loads and saves its editor through:
+
+```http
+GET /api/assessments/{assessmentId}/question-bank
+PUT /api/assessments/{assessmentId}/question-bank
+```
+
+Both require an admin token. GET and successful PUT return `{ "version": "...", "bank": { ... } }`. The bank contains `id`, `title`, `isPublished`, `attemptCount`, `hasUnsupportedQuestions`, and three arrays:
+
+- `topics`: `{ id, name, description }`
+- `questions`: `{ id, text, options: ["..."], correctIndex }` for `SingleChoice`
+- `openQuestions`: `{ id, text }` for `TextInput`
+
+PUT sends `version` from the last response plus all three arrays at the top level. It replaces the draft question bank in one transaction; question/option IDs are regenerated, so use the returned bank and version after saving. JSON import and Reset to Defaults use this same operation.
+
+Validation requires at most 100 topics and 500 questions in total, unique topic names (up to 200 characters), topic descriptions up to 1000 characters, question text up to 1000 characters, and 2–20 nonempty choice options up to 500 characters each with a valid zero-based `correctIndex`.
+
+Invalid content returns `400`; a missing assessment returns `404`. Stale versions, published assessments, any existing attempts, unsupported question types, and conflicting descriptions of topics shared with another assessment return `409` without applying a partial save. Reload and reconcile edits after a version conflict. An unused published assessment can be unpublished before editing; an assessment with attempts must be cloned.
+
+The full-model content endpoint and individual CRUD routes above remain available. The question-bank representation is limited to two types and must not be treated as a lossless export of unsupported formats. See [QuestionType architecture](../../docs/technical.md#core-data-model).
 
 ## 3. Admin submissions/review contract
 
@@ -687,7 +714,7 @@ selfEvaluation[]
 openAnswers[]
 ```
 
-Use this endpoint for the current MVP admin dashboard if the UI does not yet support selecting `assessmentId`.
+This is the legacy configured-assessment route. The integrated dashboard selects an assessment and uses the routes below.
 
 ### 3.2 Load submissions for selected assessment
 
@@ -875,6 +902,8 @@ teacherNote = submitted value
 
 For `400 Bad Request` responses, show the backend message to the admin/student where appropriate.
 
+Handle `401` as missing/invalid admin authentication, `404` as a missing resource, and question-bank `409` as a conflict requiring user action rather than a successful save.
+
 Some errors return plain text, for example:
 
 ```text
@@ -910,4 +939,4 @@ Backend is now the source of truth for:
 - teacher notes
 - self-evaluation
 
-`localStorage` can be used only as temporary UI cache during migration. It must not remain a competing permanent source of truth.
+The integrated pages do not store application data in `localStorage`. In-progress student entries and unsaved editor state are held in memory; the admin token uses `sessionStorage`. Existing browser-only historical data is not automatically imported or removed.

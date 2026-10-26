@@ -10,7 +10,7 @@ This document describes the product and its boundaries. For installation, test c
 
 ## Users and workflows
 
-**Student / participant.** A participant opens a link to a published assessment, supplies a self-chosen participant code instead of registering or logging in, rates their own knowledge, answers single-choice and open-text questions, and submits the assessment. The code identifies a submission but does **not** authenticate the participant. The student receives a submission confirmation rather than teacher-only scoring details.
+**Student / participant.** A participant opens a link to a published assessment, supplies a self-chosen participant code instead of registering or logging in, rates their own knowledge, answers single-choice and open-text questions, and submits the assessment. The code identifies a submission but does **not** authenticate the participant. The student page displays a submission confirmation rather than scores. This is a display choice, not an access restriction: the submission API response includes scores and correct-answer details (see the [API contract](../backend/Docs/frontend-contract.md#14-submit-answers)).
 
 **Teacher / administrator.** A teacher signs in to the prototype's development admin interface, creates an assessment draft or clones an existing assessment, manages topics and questions, imports or exports a question bank, publishes a ready assessment, shares its student link, reviews submissions, adds notes and evaluations to open answers, and exports results.
 
@@ -50,7 +50,7 @@ The frontend is a static HTML/CSS/JavaScript application; the backend is an ASP.
 
 ## Broader product direction (not implemented scope)
 
-The original specification also envisaged multi-section assessments, additional formats (multiple choice with several correct options, sliders, elimination and ordering), question banks and dynamically generated questions, configurable assessment/question time limits, weighted or penalty-based scoring, time-based and confidence-based scoring, and richer attempt histories and results.
+The original specification also envisaged multi-section assessments, additional formats (multiple choice with several correct options, sliders, elimination and ordering), dynamically generated questions, configurable timing throughout the student workflow, weighted or penalty-based scoring, time-based and confidence-based scoring, and richer attempt histories and results. The current editable question bank is already implemented. Assessment-level time limits exist in the backend, but the integrated student page does not enforce them; per-question timing remains an extension. See the [technical overview](technical.md#core-data-model) for the distinction between model support and integrated features.
 
 These are **potential extensions**, not commitments or accepted requirements for this prototype. Their exact behavior and priorities need product decisions before implementation. The [candidate backlog](product-backlog.md) lists nearer-term improvements and unresolved decisions without treating them as delivered features.
 

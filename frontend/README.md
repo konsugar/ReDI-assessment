@@ -9,7 +9,7 @@ Static HTML, CSS and JavaScript frontend for the [ReDI Assessment prototype](../
 
 Share the assessment-specific **Open student link** from the teacher dashboard (`evaluation.html?assessmentId=...`). Without that parameter, the student page uses the backend's configured default assessment, which may not exist in a new database.
 
-The student sees a submission confirmation, not the teacher's scores or per-question feedback.
+The student page displays a submission confirmation. The API response still includes scores and correct-answer details; see the [submission contract](../backend/Docs/frontend-contract.md#14-submit-answers).
 
 ## Local operation
 

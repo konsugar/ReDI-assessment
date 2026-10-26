@@ -3,7 +3,7 @@
 Requires .NET 10 SDK, Python 3, SQL Server LocalDB and `sqlcmd`. The commands work with Windows PowerShell 5.1 and PowerShell 7. Run each command separately from the repository root.
 
 ```powershell
-Set-Location 'C:\Users\konsu\Dev\ReDI-assessment'
+Set-Location 'C:\path\to\ReDI-assessment'
 ```
 
 Start both parts of the application:

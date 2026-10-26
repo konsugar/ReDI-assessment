@@ -14,9 +14,15 @@ ReDI Assessment is a simple assessment application for educational programs. Stu
 - `frontend/` — static HTML, CSS and JavaScript pages for students and teachers (no frontend build step).
 - `backend/` — ASP.NET Core Web API (.NET 10), Entity Framework Core and SQL Server migrations.
 - `tests/` — database/browser integration checks.
-- `docs/` — technical notes on repository consolidation and dependency updates.
+- `docs/` — product scope, architecture, local operation, backlog and historical technical notes.
 
 The backend database is the source of truth for assessments, questions, submissions and teacher reviews; the frontend communicates with it through HTTP APIs.
+
+## Documentation
+
+- [Product & Scope](docs/product-scope.md) — implemented workflows, boundaries and potential extensions.
+- [Technical overview](docs/technical.md) — architecture, data model and implementation invariants.
+- [Frontend/backend contract](backend/Docs/frontend-contract.md) — endpoints, payloads and authentication.
 
 ## One-command local operation
 

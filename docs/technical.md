@@ -16,7 +16,11 @@ Backend folders: `Controllers/` (HTTP entry points), `DTOs/` (request/response s
 - `AssessmentAttempt` belongs to an assessment, stores `ParticipantCode` and timestamps, and has `AttemptQuestion` and `AttemptSelfEvaluation` children.
 - `AttemptAnswerOption` connects attempt answers to selected options. Teacher reviews and open-answer details are handled through the attempt/submission workflow.
 
-The `QuestionType` enum defines `SingleChoice`, `MultipleChoice`, `NumericInput`, `Slider` and `TextInput`. **Only SingleChoice and TextInput are supported by the integrated student/editor flow.** The existence of an enum value is not proof of a delivered feature.
+The `QuestionType` enum defines `SingleChoice`, `MultipleChoice`, `NumericInput`, `Slider` and `TextInput`. This extensible model is a deliberate original architectural decision to accommodate future question formats. **Only SingleChoice and TextInput are supported by the integrated student/editor flow.** The existence of an enum value is not proof of a delivered feature.
+
+Delivering another format requires coordinated frontend rendering and editing, validation (including readiness rules), answer handling and persistence/API payloads, scoring behavior, and tests across the integrated workflow. The enum provides an extension point, not a complete implementation. The current question-bank editor rejects saves for assessments containing unsupported types; the student question service filters to the two supported types. Readiness checks alone do not reject every mixed assessment containing unsupported types.
+
+Assessment-level timing exists in the backend model and authenticated attempt APIs. The integrated student page submits all answers at once and does not start a timed attempt or enforce a countdown; per-question timing is not implemented.
 
 ## Main flows
 
