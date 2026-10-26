@@ -18,6 +18,32 @@ ReDI Assessment is a simple assessment application for educational programs. Stu
 
 The backend database is the source of truth for assessments, questions, submissions and teacher reviews; the frontend communicates with it through HTTP APIs.
 
+## One-command local operation
+
+After the database setup below, you can start both servers from one PowerShell terminal:
+
+```powershell
+.\redi.ps1 start
+```
+
+Check or stop the managed processes:
+
+```powershell
+.\redi.ps1 status
+```
+
+```powershell
+.\redi.ps1 stop
+```
+
+Create and verify a database backup:
+
+```powershell
+.\redi.ps1 backup
+```
+
+Backup and restore require SQL Server command-line tools (`sqlcmd`). Restore creates a separate database and never overwrites an existing one. See [local workflow instructions](docs/local-workflow.md) for restore, logs and test ports, and [candidate functional improvements](docs/product-backlog.md) for the proposed backlog. The manual two-terminal startup remains documented below.
+
 ## Run locally (Windows)
 
 These instructions use **Windows PowerShell** because the included database configuration relies on **SQL Server LocalDB**. Open a separate terminal for each server.
