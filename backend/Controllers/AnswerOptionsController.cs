@@ -8,7 +8,11 @@ using ReDI.Assessment.Api.DTOs;
 using ReDI.Assessment.Api.Models;
 using ReDI.Assessment.Api.Services;
 
+using Microsoft.AspNetCore.Authorization;
+
 [ApiController]
+[Authorize]
+
 [Route("api/questions/{questionId:int}/answer-options")]
 public class AnswerOptionsController : ControllerBase
 {

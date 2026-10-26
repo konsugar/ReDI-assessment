@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReDI School — Knowledge Evaluation</title>
+    <link rel="icon" type="image/webp" href="./logo/favicon.webp">
+    <link rel="stylesheet" href="evaluation.css">
+</head>
+<body>
+
+  <header class="eval-header">
+    <div class="eval-header-inner">
+      <span class="eval-logo">
+        <img src="./logo/logo_long.png" alt="ReDI School">
+      </span>
+      <span class="eval-header-label">Knowledge Evaluation</span>
+    </div>
+  </header>
+
+  <main class="eval-main">
+
+    <!-- ── SECTION 1: LOGIN ─────────────────────────────────────────────── -->
+    <section id="section-login" class="eval-section">
+      <form id="login-form" class="eval-card login-card" novalidate>
+        <h1 class="eval-title">Knowledge Evaluation</h1>
+        <p class="eval-subtitle">Enter your participant code to begin.</p>
+
+        <div class="form-group">
+          <label for="participant-code">Participant Code</label>
+          <input
+            type="text"
+            id="participant-code"
+            name="participant-code"
+            placeholder="e.g. ReDI-001"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <span id="code-error" class="field-error hidden">Please enter your participant code.</span>
+        </div>
+
+        <div class="gdpr-notice">
+          <strong>Privacy notice:</strong> Your participant code is used instead of your name.
+          No personal information is collected or stored. This evaluation complies with GDPR.
+        </div>
+
+        <button type="submit" id="btn-start" class="btn-primary btn-full">Start Evaluation</button>
+      </form>
+    </section>
+
+    <!-- ── SECTION 2: TEST ──────────────────────────────────────────────── -->
+    <section id="section-test" class="eval-section hidden">
+
+      <div class="progress-bar-wrapper">
+        <div class="progress-steps">
+          <div class="progress-step active" id="step-1">
+            <div class="step-dot"><span>1</span></div>
+            <span class="step-label">Self-Evaluation</span>
+          </div>
+          <div class="progress-line"></div>
+          <div class="progress-step" id="step-2">
+            <div class="step-dot"><span>2</span></div>
+            <span class="step-label">Knowledge Test</span>
+          </div>
+          <div class="progress-line"></div>
+          <div class="progress-step" id="step-3">
+            <div class="step-dot"><span>3</span></div>
+            <span class="step-label">Written Answers</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part A: Self-Evaluation -->
+      <div id="part-a" class="eval-part">
+        <div class="eval-card">
+          <h2>Part A — Self-Evaluation</h2>
+          <p class="eval-subtitle">Rate your current knowledge level for each topic.</p>
+          <div class="rating-legend">
+            <span>1 — Beginner</span>
+            <span>2 — Elementary</span>
+            <span>3 — Intermediate</span>
+            <span>4 — Advanced</span>
+            <span>5 — Expert</span>
+          </div>
+          <div id="self-eval-container"></div>
+          <div class="eval-actions">
+            <button id="btn-to-mcq" class="btn-primary">Next: Knowledge Test →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part B: Multiple Choice -->
+      <div id="part-b" class="eval-part hidden">
+        <div class="eval-card">
+          <h2>Part B — Knowledge Test</h2>
+          <p class="eval-subtitle">Select the correct answer for each question.</p>
+          <div id="mcq-container"></div>
+          <div class="eval-actions">
+            <button id="btn-back-to-self" class="btn-secondary">← Back</button>
+            <button id="btn-to-open" class="btn-primary">Next: Written Answers →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Part C: Open Questions -->
+      <div id="part-c" class="eval-part hidden">
+        <div class="eval-card">
+          <h2>Part C — Written Answers</h2>
+          <p class="eval-subtitle">Answer the following questions in your own words.</p>
+          <div id="open-container"></div>
+          <div class="eval-actions">
+            <button id="btn-back-to-mcq" class="btn-secondary">← Back</button>
+            <button id="btn-submit" class="btn-primary">Submit Evaluation</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── SECTION 3: RESULTS ───────────────────────────────────────────── -->
+    <section id="section-results" class="eval-section hidden">
+      <div class="eval-card">
+        <div id="results-container"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="questions-default.js"></script>
+  <script src="evaluation.js"></script>
+</body>
+</html>

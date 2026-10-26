@@ -6,11 +6,15 @@ using ReDI.Assessment.Api.DTOs;
 using ReDI.Assessment.Api.Models;
 using ReDI.Assessment.Api.Services;
 
+using Microsoft.AspNetCore.Authorization;
+
 using AssessmentEntity = ReDI.Assessment.Api.Models.Assessment;
 
 namespace ReDI.Assessment.Api.Controllers;
 
 [ApiController]
+[Authorize]
+
 [Route("api/[controller]")]
 public class AssessmentsController : ControllerBase
 {

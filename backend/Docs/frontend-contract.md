@@ -14,6 +14,57 @@ or a concrete URL such as:
 https://localhost:7101
 ```
 
+## 0. Authentication
+
+### 0.1 Admin login
+
+```http
+POST /api/admin/auth/login
+Content-Type: application/json
+
+{
+	"username": "admin",
+	"password": "admin-dev-password"
+}
+```
+
+Successful response:
+```
+{
+	"accessToken": "...",
+	"tokenType": "Bearer",
+	"expiresUtc": "2026-01-01T12:00:00Z",
+	"username": "admin"
+}
+```
+
+Use the token for protected admin endpoints:
+
+```
+Authorization: Bearer <accessToken>
+```
+
+### 0.2 Public endpoints
+
+These endpoints do not require an admin token:
+
+```
+POST /api/admin/auth/login
+GET /api/questions
+POST /api/submissions
+GET /api/assessments/{assessmentId}/frontend-questions
+POST /api/assessments/{assessmentId}/submissions
+GET /api/frontend-assessments/launchable
+```
+
+### 0.3 Protected admin endpoints
+
+Admin content, assessment status, submissions review, topics, questions, answer options, and attempt endpoints require:
+
+```
+Authorization: Bearer <accessToken>
+```
+
 ## 1. Student frontend contract
 
 ### 1.1 Current frontend assessment
@@ -88,6 +139,7 @@ Use this endpoint if the student frontend needs to list assessments that can act
 GET /api/frontend-assessments/launchable
 ```
 
+This endpoint is public and is the only assessment-list endpoint intended for the student frontend.
 It returns only assessments where:
 
 ```text
@@ -176,6 +228,8 @@ Response body:
 ```
 
 ## 2. Admin content management contract
+
+All endpoints in this section require an admin JWT token unless explicitly stated otherwise.
 
 Use this contract for the admin screen that creates and edits assessments, topics, questions, answer options, and publication status.
 
@@ -333,13 +387,18 @@ submissionCount = 0
 
 ### 2.5 Assessment status endpoints
 
+Admin-only status endpoints:
+
 ```http
 GET /api/frontend-assessments
 GET /api/frontend-assessments/{assessmentId}
 GET /api/frontend-assessments/current
-GET /api/frontend-assessments/launchable
 ```
 
+These require:
+```
+Authorization: Bearer <accessToken>
+```
 Use these endpoints for selectors, badges, launch status, and refresh after admin operations.
 
 Important fields:
@@ -594,6 +653,8 @@ isSupportedForFrontend = true
 ```
 
 ## 3. Admin submissions/review contract
+
+All review endpoints in this section require an admin JWT token, except student submission creation endpoints described in the student frontend contract.
 
 Use this contract for the teacher/admin review dashboard.
 

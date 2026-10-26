@@ -3,9 +3,13 @@
 using ReDI.Assessment.Api.DTOs;
 using ReDI.Assessment.Api.Services;
 
+using Microsoft.AspNetCore.Authorization;
+
 namespace ReDI.Assessment.Api.Controllers;
 
 [ApiController]
+[Authorize]
+
 [Route("api/frontend-assessments")]
 public class FrontendAssessmentsController : ControllerBase
 {
@@ -38,6 +42,7 @@ public class FrontendAssessmentsController : ControllerBase
         return assessment;
     }
 
+    [AllowAnonymous]
     [HttpGet("launchable")]
     public async Task<ActionResult<List<FrontendAssessmentSummaryResponse>>> GetLaunchableFrontendAssessments()
     {
