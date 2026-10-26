@@ -1,6 +1,6 @@
 {
   "name": "redi-assessment-integration-tests",
   "private": true,
-  "scripts": { "test": "node database-ui.cjs" },
+  "scripts": { "test": "node database-ui.cjs", "test:workflow": "node multi-student-workflow.cjs" },
   "devDependencies": { "playwright": "1.62.1" }
 }

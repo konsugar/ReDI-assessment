@@ -47,3 +47,13 @@ node .\tests\database-ui.cjs
 Alternatively leave `REDI_TEST_BROWSER` unset and install Playwright's Chromium. The test reads development admin credentials from the backend configuration without printing them. Both servers should be stopped with Ctrl+C after testing.
 
 Coverage: atomic question-bank saves; stale-version, invalid-import, unauthenticated and locked-assessment rejection; real browser editing/add/delete/import/publication; failed-write feedback; student submission; teacher review; visibility from a fresh browser context; absence of localStorage application data.
+
+For the complete three-student workflow, use the same test servers, dependencies and environment variables, then run:
+
+```powershell
+node .\tests\multi-student-workflow.cjs
+```
+
+This second scenario creates a draft through the teacher UI, imports and publishes a two-question test, submits answers from three independent browser contexts with expected scores 2/2, 1/2 and 0/2, saves written-answer reviews, checks both CSV exports and reopens each review in a fresh teacher session. The test leaves labelled synthetic data in the separate test database.
+
+The test servers can also be launched with one command using [the local workflow tools](../docs/local-workflow.md#test-environment).

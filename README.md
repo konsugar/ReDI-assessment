@@ -7,25 +7,25 @@ One assessment application, with one backend, one frontend and one database.
 
 ## Run locally
 
-Install .NET 10 SDK, SQL Server LocalDB and Python 3. Run these PowerShell commands separately from the repository root.
+Install .NET 10 SDK, SQL Server LocalDB, `sqlcmd` and Python 3. From the repository root, start the application with one PowerShell command:
 
 ```powershell
-dotnet build .\backend\ReDI.Assessment.Api.csproj
+.\redi.ps1 start
 ```
 
-Configure the local database and development admin credentials as described in [backend/README.md](backend/README.md). Apply migrations explicitly when you are ready to update your local database; consolidation does not apply them automatically.
+Check status or stop both managed processes:
 
 ```powershell
-dotnet run --project .\backend\ReDI.Assessment.Api.csproj --launch-profile https
+.\redi.ps1 status
 ```
-
-In a second terminal:
 
 ```powershell
-python -m http.server 8000 --directory .\frontend
+.\redi.ps1 stop
 ```
 
-Open http://localhost:8000/evaluation.html or http://localhost:8000/admin.html. Both pages use `https://localhost:7101/api`; Swagger is at `https://localhost:7101/swagger`. Trust your local ASP.NET development certificate if your browser requires it.
+Open http://127.0.0.1:8000/evaluation.html or http://127.0.0.1:8000/admin.html. Both pages use `https://localhost:7101/api`; Swagger is at `https://localhost:7101/swagger`. Trust your local ASP.NET development certificate if your browser requires it. Configure the database and credentials as described in [backend/README.md](backend/README.md); migrations are applied explicitly, never by `start`.
+
+Use `./redi.ps1 backup` to create and verify a local database backup. See [local workflow instructions](docs/local-workflow.md) for restore commands, logs, and safe process management. Candidate future features are listed in the [product backlog](docs/product-backlog.md).
 
 The frontend stores application data through the API in SQL Server. Teachers can create or clone a draft, edit/import its question bank, publish it and share its student link. Notes and evaluations are saved with **Save review** and are available across sessions. See [frontend/README.md](frontend/README.md) for the workflow and [tests/README.md](tests/README.md) for real database/browser integration checks.
 
