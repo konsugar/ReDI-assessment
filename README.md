@@ -1,36 +1,109 @@
 # ReDI Assessment
 
-One assessment application, with one backend, one frontend and one database.
+> **Project status — basic prototype.** This repository contains a very basic, locally runnable prototype that meets the minimum requirements of the original project specification. Further development was started but has not been published in this repository. Continuing that work depends on the availability of additional resources and funding. The current prototype is not a production-ready service.
 
-- `backend/`: ASP.NET Core API (.NET 10), Entity Framework Core migrations and backend documentation.
-- `frontend/`: static student evaluation and teacher dashboard (HTML, CSS and JavaScript).
+ReDI Assessment is a simple assessment application for educational programs. Students complete a self-evaluation, single-choice questions and open-text questions; teachers manage assessments, review submissions, record evaluations and export results.
 
-## Run locally
+## Credits
 
-Install .NET 10 SDK, SQL Server LocalDB and Python 3. Run these PowerShell commands separately from the repository root.
+- **Frontend:** implemented by [alisher_kay](https://github.com/alisher-kay).
+- **Backend and frontend–backend integration:** implemented by [konsugar](https://github.com/konsugar), with additional development and refinement assisted by ChatGPT.
+
+## Repository structure
+
+- `frontend/` — static HTML, CSS and JavaScript pages for students and teachers (no frontend build step).
+- `backend/` — ASP.NET Core Web API (.NET 10), Entity Framework Core and SQL Server migrations.
+- `tests/` — database/browser integration checks.
+- `docs/` — technical notes on repository consolidation and dependency updates.
+
+The backend database is the source of truth for assessments, questions, submissions and teacher reviews; the frontend communicates with it through HTTP APIs.
+
+## Run locally (Windows)
+
+These instructions use **Windows PowerShell** because the included database configuration relies on **SQL Server LocalDB**. Open a separate terminal for each server.
+
+### 1. Install prerequisites
+
+- [Git](https://git-scm.com/downloads)
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10)
+- [SQL Server Express LocalDB](https://learn.microsoft.com/en-us/sql/database-engine/configure-windows/sql-server-express-localdb)
+- [Python 3](https://www.python.org/downloads/) for serving the static frontend
+
+### 2. Clone the repository
 
 ```powershell
-dotnet build .\backend\ReDI.Assessment.Api.csproj
+git clone https://github.com/konsugar/ReDI-assessment.git
+cd ReDI-assessment
 ```
 
-Configure the local database and development admin credentials as described in [backend/README.md](backend/README.md). Apply migrations explicitly when you are ready to update your local database; consolidation does not apply them automatically.
+All subsequent commands run from this repository root.
+
+### 3. Set up the backend database
+
+The default development database is `ReDIAssessmentDb` on `(localdb)\\MSSQLLocalDB`, configured in `backend/appsettings.json`. The database is local and is **not included** in the repository.
+
+Install the EF Core command-line tool if you do not have it:
+
+```powershell
+dotnet tool install --global dotnet-ef
+```
+
+If it is already installed, update it if required (`dotnet tool update --global dotnet-ef`). Ensure the tool is compatible with EF Core 10.
+
+Restore and build the backend, then create/update the local database using the included migrations:
+
+```powershell
+dotnet restore .\backend\ReDI.Assessment.Api.csproj
+dotnet build .\backend\ReDI.Assessment.Api.csproj
+dotnet ef database update --project .\backend\ReDI.Assessment.Api.csproj
+```
+
+Migrations are not applied automatically at startup.
+
+### 4. Start the backend
 
 ```powershell
 dotnet run --project .\backend\ReDI.Assessment.Api.csproj --launch-profile https
 ```
 
-In a second terminal:
+The configured development API is `https://localhost:7101/api` and the Swagger UI is at [https://localhost:7101/swagger](https://localhost:7101/swagger). If the browser reports a development HTTPS certificate problem, run:
+
+```powershell
+dotnet dev-certs https --trust
+```
+
+Restart the backend/browser if necessary. Keep this terminal running.
+
+### 5. Start the frontend
+
+Open **another PowerShell terminal** in the repository root:
 
 ```powershell
 python -m http.server 8000 --directory .\frontend
 ```
 
-Open http://localhost:8000/evaluation.html or http://localhost:8000/admin.html. Both pages use `https://localhost:7101/api`; Swagger is at `https://localhost:7101/swagger`. Trust your local ASP.NET development certificate if your browser requires it.
+Then open:
 
-The frontend stores application data through the API in SQL Server. Teachers can create or clone a draft, edit/import its question bank, publish it and share its student link. Notes and evaluations are saved with **Save review** and are available across sessions. See [frontend/README.md](frontend/README.md) for the workflow and [tests/README.md](tests/README.md) for real database/browser integration checks.
+- **Teacher dashboard:** [http://localhost:8000/admin.html](http://localhost:8000/admin.html)
+- **Student assessment:** [http://localhost:8000/evaluation.html](http://localhost:8000/evaluation.html)
 
-## Repository history
+Both pages are configured to call `https://localhost:7101/api`. They will not function correctly without the backend. Open the backend Swagger URL once and accept/trust the development certificate if prompted.
 
-The consolidation branch preserves the original backend main history and the independent frontend `feature/student-flow-integration` history through a merge commit. The backend root was moved in a separate commit before importing the integrated frontend/backend snapshot. No existing history was rewritten.
+### 6. Try the application
 
-See [docs/consolidation.md](docs/consolidation.md) for source revisions, preservation details and validation limits.
+In the teacher dashboard, log in with the **development-only** credentials currently defined in `backend/appsettings.Development.json` (the sample username is `admin`; see that file for its password). Create or clone an assessment, edit its questions, and publish it when the dashboard marks it as ready. Use its **Open student link** to open the relevant assessment in the student page (`evaluation.html?assessmentId=...`). Submit answers as a student, then return to the teacher dashboard to view the submission and save a review.
+
+The plain `evaluation.html` URL uses the configured `FrontendAssessment:AssessmentId` instead of a selected assessment. On a fresh database, this default ID may not exist: **the teacher-generated student link is the recommended route**.
+
+For additional details, see [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md). Database/browser integration tests are described in [tests/README.md](tests/README.md).
+
+## Prototype limitations
+
+- The application uses a minimal development admin login, not a complete multi-user/role system.
+- Students identify themselves with a participant code; student accounts are not implemented.
+- The student frontend supports single-choice and free-text questions; other question types present in backend code are not fully integrated.
+- The default database and local development credentials are **not suitable for public deployment**. Replace credentials/secrets and review security, hosting and privacy requirements before deploying.
+
+## Further development
+
+This repository represents the published basic prototype, not the unpublished work started afterward. Its current implementation can serve as a starting point for future development if resources and funding become available.
