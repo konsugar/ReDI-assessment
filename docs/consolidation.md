@@ -53,4 +53,4 @@ Teacher notes and open-answer evaluations use the existing database endpoints. D
 
 `tests/database-ui.cjs` passed in headless Edge with an isolated browser profile and the separate LocalDB test database. It verified real question edits, add/delete, JSON import, publication, student submission, teacher review and retrieval from a new independent browser session. It also verified rejected stale/invalid/unauthorized/locked writes and visible feedback for a simulated server failure without a false successful save. Both browser sessions had empty localStorage.
 
-No database schema migration or dependency update is required for this follow-up. Existing NuGet warnings remain as listed above.
+No database schema migration or dependency update was required for the persistence follow-up. The NuGet warnings recorded above were subsequently resolved in the [dependency security update](dependency-security-update.md).
